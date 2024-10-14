@@ -37,7 +37,7 @@ Our system operates on ROS2, supporting **ROS Humble**, **Iron**, and **Jazzy**.
    ```sh
    colcon build
    ```
-   
+
 4. **Source the Setup Script**:
    ```sh
    source ./install/setup.bash
