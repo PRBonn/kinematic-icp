@@ -13,7 +13,7 @@
 
 [Kinematic-ICP](https://www.ipb.uni-bonn.de/wp-content/papercite-data/pdf/kissteam2025icra.pdf) is a LiDAR odometry approach that explicitly incorporates the kinematic constraints of mobile robots into the classic point-to-point ICP algorithm.
 
-<img src="https://github.com/user-attachments/assets/93826e4b-7319-459b-9d84-83929606ef4d" alt="Kinematic-ICP" width="500"/>
+<img src="https://github.com/user-attachments/assets/c12195e0-4ca0-415e-814f-783ca77423d9" alt="Kinematic-ICP" width="500"/>
 
 </div>
 
