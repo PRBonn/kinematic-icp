@@ -1,0 +1,24 @@
+name: ROS nodes
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  ros2_node:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        release: [humble, iron, jazzy, rolling]
+    container: osrf/ros:${{ matrix.release }}-desktop
+    steps:
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.13
+        with:
+          cmake-version: "3.25.x"
+      - uses: actions/checkout@v3
+      - name: Run colcon
+        run: source /opt/ros/${{ matrix.release }}/setup.bash && colcon build --event-handlers console_direct+
+        shell: bash
