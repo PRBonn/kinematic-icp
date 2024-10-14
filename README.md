@@ -82,7 +82,7 @@ For post-processing and analysis, the `offline_node` processes a ROS bag file at
 ros2 launch kinematic_icp offline_node.launch.py lidar_topic:=<TOPIC> bag_filename:=<ROSBAG>
 ```
 
-RViz can also be used in this mode by setting the `visualize` flag to `true`. Additionally, the system will output a file in TUM format containing the estimated poses, named **<ROSBAG>_kinematic_poses_tum.txt**. This file is saved in the same directory as the ROS bag file by default.
+RViz can also be used in this mode by setting the `visualize` flag to `true`. Additionally, the system will output a file in TUM format containing the estimated poses, named **\<ROSBAG>_kinematic_poses_tum.txt**. This file is saved in the same directory as the ROS bag file by default.
 
 To specify a custom directory for the output file, use the `output_dir` parameter:
 
