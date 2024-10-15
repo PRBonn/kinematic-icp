@@ -97,10 +97,11 @@ If you use this library for any academic work, please cite our original [paper](
 
 ```bibtex
 @article{kissteam2024arxiv,
-  author    = {Guadagnino ,Tiziano and Mersch, Benedikt and Vizzo, Ignacio and Gupta, Saurabh and Malladi, Meher V.R. and Lobefaro, Luca and Doisy, Guillaume and Stachniss, Cyrill}
-  title     = {{Kinematic-ICP: Enhancing LiDAR Odometry with Kinematic Constraints for Wheeled Mobile Robots Moving on Planar Surfaces
-  journal   = arXiv Preprint,
-  year      = {2024},
-  codeurl   = {https://github.com/PRBonn/kinematic-icp},
+  author      = {Guadagnino ,Tiziano and Mersch, Benedikt and Vizzo, Ignacio and Gupta, Saurabh and Malladi, Meher V.R. and Lobefaro, Luca and Doisy, Guillaume and Stachniss, Cyrill},
+  title       = {{Kinematic-ICP: Enhancing LiDAR Odometry with Kinematic Constraints for Wheeled Mobile Robots Moving on Planar Surfaces}},
+  journal     = arXiv Preprint,
+  year        = {2024},
+  volume      = {arXiv:2410.10277},
+  url         = {https://arxiv.org/pdf/2410.10277},
 }
 ```
