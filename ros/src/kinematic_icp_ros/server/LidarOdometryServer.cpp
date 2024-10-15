@@ -64,7 +64,7 @@ auto TimeToROSStamp(const double &time) {
 };
 double ROSStampToTime(const builtin_interfaces::msg::Time stamp) {
     double time = static_cast<double>(stamp.sec);
-    time += static_cast<double>(stamp.nanosec) * 1e9;
+    time += static_cast<double>(stamp.nanosec) * 1e-9;
     return time;
 };
 }  // namespace
