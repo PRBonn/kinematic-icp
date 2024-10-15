@@ -68,7 +68,7 @@ private:
                        const std::vector<Eigen::Vector3d> keypoints);
 
     // Temporal initializaiton strattegy until we convert the odometry server to life cycle
-    void InitializePoseAndExtrinsic(const std::string &lidar_frame_id);
+    void InitializePoseAndExtrinsic(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg);
 
     /// Tools for broadcasting TFs.
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
@@ -99,7 +99,7 @@ private:
     std::string wheel_odom_frame_{"odom"};
     std::string base_frame_{"base_link"};
     // TF frame initialization flag
-    bool initialize_odom_node;
+    bool initialize_odom_node{false};
 
     rclcpp::Node::SharedPtr node_;
 };
