@@ -54,6 +54,19 @@ namespace {
 using milliseconds = std::chrono::milliseconds;
 using seconds = std::chrono::duration<long double>;
 using std::chrono::duration_cast;
+
+// Convert to ros time
+auto TimeToROSStamp(const double &time) {
+    builtin_interfaces::msg::Time stamp;
+    stamp.sec = static_cast<int32_t>(std::floor(time));
+    stamp.nanosec = static_cast<uint32_t>((time - stamp.sec) * 1e9);
+    return stamp;
+};
+double ROSStampToTime(const builtin_interfaces::msg::Time stamp) {
+    double time = static_cast<double>(stamp.sec);
+    time += static_cast<double>(stamp.nanosec) * 1e9;
+    return time;
+};
 }  // namespace
 
 namespace kinematic_icp_ros {
@@ -147,9 +160,10 @@ LidarOdometryServer::LidarOdometryServer(rclcpp::Node::SharedPtr node) : node_(n
     odom_msg_.twist.covariance[35] = orientation_covariance;
 }
 
-void LidarOdometryServer::InitializePoseAndExtrinsic(const std::string &lidar_frame_id) {
+void LidarOdometryServer::InitializePoseAndExtrinsic(
+    const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg) {
     if (!tf2_buffer_->_frameExists(wheel_odom_frame_) || !tf2_buffer_->_frameExists(base_frame_) ||
-        !tf2_buffer_->_frameExists(lidar_frame_id)) {
+        !tf2_buffer_->_frameExists(msg->header.frame_id)) {
         return;
     }
 
@@ -160,7 +174,7 @@ void LidarOdometryServer::InitializePoseAndExtrinsic(const std::string &lidar_fr
 
     try {
         sensor_to_base_footprint_ = tf2::transformToSophus(
-            tf2_buffer_->lookupTransform(base_frame_, lidar_frame_id, tf2::TimePointZero));
+            tf2_buffer_->lookupTransform(base_frame_, msg->header.frame_id, tf2::TimePointZero));
     } catch (tf2::TransformException &ex) {
         RCLCPP_ERROR(node_->get_logger(), "%s", ex.what());
         return;
@@ -168,12 +182,13 @@ void LidarOdometryServer::InitializePoseAndExtrinsic(const std::string &lidar_fr
 
     // Initialization finished
     RCLCPP_INFO(node_->get_logger(), "KISS-ICP ROS 2 odometry node initialized");
+    current_stamp_ = msg->header.stamp;
     initialize_odom_node = true;
 }
 
 void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg) {
     if (!initialize_odom_node) {
-        InitializePoseAndExtrinsic(msg->header.frame_id);
+        InitializePoseAndExtrinsic(msg);
     }
 
     // Buffer the last state This will be used for computing the veloicty
@@ -182,17 +197,11 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
     // Extract timestamps
     const auto timestamps = GetTimestamps(msg);
     const auto &[min_it, max_it] = std::minmax_element(timestamps.cbegin(), timestamps.cend());
-    // Convert to ros time
-    auto to_ros_stamp = [](const double &time) {
-        builtin_interfaces::msg::Time stamp;
-        stamp.sec = static_cast<int32_t>(std::floor(time));               // seconds part
-        stamp.nanosec = static_cast<uint32_t>((time - stamp.sec) * 1e9);  // nanoseconds part
-        return stamp;
-    };
     // Update what is the current stamp of this iteration
-    const auto begin_scan_stamp = min_it != timestamps.cend() ? to_ros_stamp(*min_it) : last_stamp;
+    const auto begin_scan_stamp =
+        min_it != timestamps.cend() ? TimeToROSStamp(*min_it) : last_stamp;
     const auto end_scan_stamp =
-        max_it != timestamps.cend() ? to_ros_stamp(*max_it) : msg->header.stamp;
+        max_it != timestamps.cend() ? TimeToROSStamp(*max_it) : msg->header.stamp;
     current_stamp_ = end_scan_stamp;
     // Get the initial guess from the wheel odometry
     const auto delta =
@@ -210,7 +219,7 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
     }
 
     // Compute velocities, use the elapsed time between the current msg and the last received
-    const double elapsed_time = *max_it - *min_it;
+    const double elapsed_time = ROSStampToTime(end_scan_stamp) - ROSStampToTime(begin_scan_stamp);
     const Sophus::SE3d::Tangent delta_twist = (last_pose.inverse() * kinematic_icp_->pose()).log();
     const Sophus::SE3d::Tangent velocity = delta_twist / elapsed_time;
 
