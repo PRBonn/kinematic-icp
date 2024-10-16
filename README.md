@@ -46,7 +46,7 @@ Our system operates on ROS2, supporting **ROS Humble**, **Iron**, and **Jazzy**.
 
 # TF Requirements
 
-Kinematic ICP can enhance existing odometry using a 3D LiDAR. However, there are specific requirements regarding motion and transformations due to the assumption that the robot operates on a unicycle kinematic model. Below are the key requirements:
+Kinematic ICP can enhance existing odometry using a 3D LiDAR. However, there are specific requirements regarding motion and transformations since we use a kinematic motion model for the pose correction. Below are the key requirements:
 
 1. **Planar Movement**: The robot is expected to move primarily on a planar surface.
 
