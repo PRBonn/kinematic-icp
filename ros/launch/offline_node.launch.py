@@ -6,8 +6,9 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
-from launch.launch_description_sources import \
-    get_launch_description_from_python_launch_file
+from launch.launch_description_sources import (
+    get_launch_description_from_python_launch_file,
+)
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
