@@ -23,6 +23,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <cmath>
 #include <kiss_icp/core/Threshold.hpp>
 #include <kiss_icp/core/VoxelHashMap.hpp>
 #include <kiss_icp/pipeline/KissICP.hpp>
@@ -31,6 +32,7 @@
 #include <vector>
 
 #include "kinematic_icp/registration/Registration.hpp"
+#include "kinematic_icp/threshold/AdaptiveThreshold.hpp"
 
 namespace kinematic_icp::pipeline {
 
@@ -44,9 +46,10 @@ public:
     explicit KinematicICP(const kiss_icp::pipeline::KISSConfig &config)
         : registration_(
               config.max_num_iterations, config.convergence_criterion, config.max_num_threads),
+          adaptive_threshold_(config.voxel_size / std::sqrt(config.max_points_per_voxel),
+                              config.max_range),
           config_(config),
-          local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel),
-          adaptive_threshold_(config.initial_threshold, config.min_motion_th, config.max_range) {}
+          local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel) {}
 
     Vector3dVectorTuple RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
                                       const std::vector<double> &timestamps,
@@ -56,8 +59,7 @@ public:
     inline void SetPose(const Sophus::SE3d &pose) {
         last_pose_ = pose;
         local_map_.Clear();
-        adaptive_threshold_ = kiss_icp::AdaptiveThreshold(config_.initial_threshold,
-                                                          config_.min_motion_th, config_.max_range);
+        adaptive_threshold_.Reset();
     };
 
     std::vector<Eigen::Vector3d> LocalMap() const { return local_map_.Pointcloud(); };
@@ -72,10 +74,10 @@ private:
     Sophus::SE3d last_pose_;
     // Kinematic module
     KinematicRegistration registration_;
+    AdaptiveThreshold adaptive_threshold_;
     // KISS-ICP pipeline modules
     kiss_icp::pipeline::KISSConfig config_;
     kiss_icp::VoxelHashMap local_map_;
-    kiss_icp::AdaptiveThreshold adaptive_threshold_;
 };
 
 }  // namespace kinematic_icp::pipeline

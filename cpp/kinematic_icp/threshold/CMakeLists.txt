@@ -20,7 +20,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-add_library(kinematic_icp_pipeline STATIC)
-target_sources(kinematic_icp_pipeline PRIVATE KinematicICP.cpp)
-target_link_libraries(kinematic_icp_pipeline PUBLIC kinematic_icp_registration kinematic_icp_threshold kiss_icp_pipeline)
-set_global_target_properties(kinematic_icp_pipeline)
+add_library(kinematic_icp_threshold AdaptiveThreshold.cpp)
+target_link_libraries(kinematic_icp_threshold Sophus::Sophus)
+set_global_target_properties(kinematic_icp_threshold)
