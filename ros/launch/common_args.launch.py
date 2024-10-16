@@ -43,14 +43,9 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "visualize",
-                default_value="true",
+                default_value="false",
                 description="",
                 choices=["true", "false"],
-            ),
-            DeclareLaunchArgument(
-                "bag_filenames",
-                default_value="",
-                description="Comma-separated list of file paths",
             ),
         ]
     )
