@@ -11,7 +11,9 @@ from launch_ros.substitutions.find_package import get_package_share_directory
 
 
 def generate_launch_description():
-    use_sim_time = LaunchConfiguration("use_sim_time", default=(os.getenv("SIMULATION") == "true"))
+    use_sim_time = LaunchConfiguration(
+        "use_sim_time", default=(os.getenv("SIMULATION") == "true")
+    )
     tf_timeout = LaunchConfiguration(
         "tf_timeout",
         default=PythonExpression(["'0.1' if ", use_sim_time, " else '0.0'"]),
@@ -31,7 +33,8 @@ def generate_launch_description():
         ],
         parameters=[
             # KISS-ICP configuration
-            get_package_share_directory("kinematic_icp") + "/config/kinematic_icp_ros.yaml",
+            get_package_share_directory("kinematic_icp")
+            + "/config/kinematic_icp_ros.yaml",
             {
                 # Input topic, is not a remap to marry API with offline node
                 "input": LaunchConfiguration("lidar_topic"),
