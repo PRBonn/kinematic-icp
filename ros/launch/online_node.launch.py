@@ -2,6 +2,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import (
     get_launch_description_from_python_launch_file,
 )
@@ -50,10 +51,15 @@ def generate_launch_description():
             },
         ],
     )
-
-    return LaunchDescription(
-        [
-            common_launch_args,
-            kinematic_icp_online_node,
-        ]
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        output="screen",
+        arguments=[
+            "-d",
+            get_package_share_directory("kinematic_icp") + "/rviz/kinematic_icp.rviz",
+        ],
+        condition=IfCondition(LaunchConfiguration("visualize")),
     )
+
+    return LaunchDescription([common_launch_args, kinematic_icp_online_node, rviz_node])
