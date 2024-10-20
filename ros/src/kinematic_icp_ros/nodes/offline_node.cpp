@@ -38,12 +38,12 @@
 #include "kinematic_icp_ros/utils/indicators.hpp"
 
 namespace {
-std::string generateOutputFilename(const std::string &bag_filename) {
+std::filesystem::path generateOutputFilename(const std::string &bag_filename) {
     size_t last_dot = bag_filename.find_last_of(".");
     std::string output_file = bag_filename.substr(0, last_dot);
     output_file += "_kinematic_icp_poses_tum.txt";
     std::filesystem::path output_path(output_file);
-    return output_path.filename().string();
+    return output_path.filename();
 }
 }  // namespace
 
@@ -55,21 +55,21 @@ OfflineNode::OfflineNode(const rclcpp::NodeOptions &options) {
     odometry_server_ = std::make_shared<LidarOdometryServer>(node_);
 
     auto bag_filename = node_->declare_parameter<std::string>("bag_filename");
-    poses_filename_ = generateOutputFilename(bag_filename);
-    output_dir_ = node_->declare_parameter<std::string>("output_dir");
+    const auto poses_filename = generateOutputFilename(bag_filename);
+    output_pose_file_ = std::filesystem::path(node_->declare_parameter<std::string>("output_dir"));
+    output_pose_file_ /= poses_filename;
     auto tf_bridge = std::make_shared<BufferableBag::TFBridge>(node_);
     bag_multiplexer_.AddBag(BufferableBag(bag_filename, tf_bridge, pcl_topic_));
 }
 
 void OfflineNode::writePosesInTumFormat() {
-    const std::string output_file = output_dir_ + poses_filename_;
-    std::ofstream file(output_file);
+    std::ofstream file(output_pose_file_);
     if (!file.is_open()) {
-        std::cerr << "Error opening file: " << output_file << std::endl;
+        std::cerr << "Error opening file: " << output_pose_file_ << std::endl;
         return;
     }
 
-    RCLCPP_INFO_STREAM(node_->get_logger(), "Saving poses in TUM format in " << output_file);
+    RCLCPP_INFO_STREAM(node_->get_logger(), "Saving poses in TUM format in " << output_pose_file_);
 
     // Iterate over the poses and timestamps
     for (const auto &[timestamp, pose] : poses_with_timestamps_) {
