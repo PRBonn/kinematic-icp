@@ -34,7 +34,7 @@
 #include "kinematic_icp_ros/utils/RosUtils.hpp"
 
 // ROS 2 headers
-#include <tf2/time.h>
+#include <rcl/time.h>
 #include <tf2_ros/buffer_interface.h>
 #include <tf2_ros/transform_broadcaster.h>
 
@@ -54,19 +54,6 @@ namespace {
 using milliseconds = std::chrono::milliseconds;
 using seconds = std::chrono::duration<long double>;
 using std::chrono::duration_cast;
-
-// Convert to ros time
-auto TimeToROSStamp(const double &time) {
-    builtin_interfaces::msg::Time stamp;
-    stamp.sec = static_cast<int32_t>(std::floor(time));
-    stamp.nanosec = static_cast<uint32_t>((time - stamp.sec) * 1e9);
-    return stamp;
-};
-double ROSStampToTime(const builtin_interfaces::msg::Time stamp) {
-    double time = static_cast<double>(stamp.sec);
-    time += static_cast<double>(stamp.nanosec) * 1e-9;
-    return time;
-};
 }  // namespace
 
 namespace kinematic_icp_ros {
@@ -197,11 +184,13 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
     // Extract timestamps
     const auto timestamps = GetTimestamps(msg);
     const auto &[min_it, max_it] = std::minmax_element(timestamps.cbegin(), timestamps.cend());
+    // From double to ROS TimeStamp
+    auto toStamp = [](const double &time) -> builtin_interfaces::msg::Time {
+        return rclcpp::Time(tf2::durationFromSec(time).count());
+    };
     // Update what is the current stamp of this iteration
-    const auto begin_scan_stamp =
-        min_it != timestamps.cend() ? TimeToROSStamp(*min_it) : last_stamp;
-    const auto end_scan_stamp =
-        max_it != timestamps.cend() ? TimeToROSStamp(*max_it) : msg->header.stamp;
+    const auto begin_scan_stamp = min_it != timestamps.cend() ? toStamp(*min_it) : last_stamp;
+    const auto end_scan_stamp = max_it != timestamps.cend() ? toStamp(*max_it) : msg->header.stamp;
     current_stamp_ = end_scan_stamp;
     // Get the initial guess from the wheel odometry
     const auto delta =
@@ -218,8 +207,11 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
         PublishClouds(frame, kpoints);
     }
 
+    auto toTime = [](const builtin_interfaces::msg::Time &stamp) -> double {
+        return rclcpp::Time(stamp).nanoseconds() * 1e-9;
+    };
     // Compute velocities, use the elapsed time between the current msg and the last received
-    const double elapsed_time = ROSStampToTime(end_scan_stamp) - ROSStampToTime(begin_scan_stamp);
+    const double elapsed_time = toTime(current_stamp_) - toTime(last_stamp);
     const Sophus::SE3d::Tangent delta_twist = (last_pose.inverse() * kinematic_icp_->pose()).log();
     const Sophus::SE3d::Tangent velocity = delta_twist / elapsed_time;
 
