@@ -42,10 +42,12 @@ AdaptiveThreshold::AdaptiveThreshold(const double map_discretization_error, cons
       num_samples_(1) {}
 
 void AdaptiveThreshold::UpdateModelError(const Sophus::SE3d &current_deviation) {
-    const double centered_model_error =
-        ModelError(current_deviation, max_range_) - map_discretization_error_;
-    model_sse_ += centered_model_error * centered_model_error;
-    num_samples_++;
+    const double &model_error = ModelError(current_deviation, max_range_);
+    if (model_error > map_discretization_error_) {
+        const double &centered_model_error = model_error - map_discretization_error_;
+        model_sse_ += centered_model_error * centered_model_error;
+        num_samples_++;
+    }
 }
 
 }  // namespace kinematic_icp
