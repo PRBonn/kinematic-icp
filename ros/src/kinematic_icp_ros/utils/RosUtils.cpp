@@ -58,8 +58,8 @@ std::vector<double> NormalizeTimestamps(const std::vector<double> &timestamps) {
 auto ExtractTimestampsFromMsg(const PointCloud2::ConstSharedPtr msg,
                               const PointField &timestamp_field) {
     auto number_of_digits_decimal_part = [](const auto &stamp) {
-        const uint64_t converted_stamp = static_cast<uint64_t>(std::round(stamp));
-        return converted_stamp > 0 ? std::floor(std::log10(converted_stamp) + 1) : 1;
+        const uint64_t number_of_seconds = static_cast<uint64_t>(std::round(stamp));
+        return number_of_seconds > 0 ? std::floor(std::log10(number_of_seconds) + 1) : 1;
     };
     auto extract_timestamps =
         [&]<typename T>(sensor_msgs::PointCloud2ConstIterator<T> &&it) -> std::vector<double> {
