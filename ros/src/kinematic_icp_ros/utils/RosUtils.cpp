@@ -63,8 +63,8 @@ auto ExtractTimestampsFromMsg(const PointCloud2::ConstSharedPtr msg,
         timestamps.reserve(n_points);
         for (size_t i = 0; i < n_points; ++i, ++it) {
             double stamp = static_cast<double>(*it);
-            // If the stamp is larger than int32,
-            // the stamp is in nanoseconds instead of seconds, perform conversion
+            // If the stamp is larger than the max of int32, we assume the stamp is in
+            // nanoseconds instead of seconds and perform conversion
             if (*it > std::numeric_limits<int32_t>::max()) {
                 stamp *= 1e-9;
             }
