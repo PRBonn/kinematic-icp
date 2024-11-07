@@ -22,8 +22,7 @@
 // SOFTWARE.
 #include "kinematic_icp_ros/utils/RosUtils.hpp"
 
-#include <cmath>
-#include <cstdint>
+#include <limits>
 
 namespace kinematic_icp_ros::utils {
 
@@ -57,23 +56,19 @@ std::vector<double> NormalizeTimestamps(const std::vector<double> &timestamps) {
 
 auto ExtractTimestampsFromMsg(const PointCloud2::ConstSharedPtr msg,
                               const PointField &timestamp_field) {
-    auto number_of_digits_decimal_part = [](const auto &stamp) {
-        const uint64_t number_of_seconds = static_cast<uint64_t>(std::round(stamp));
-        return number_of_seconds > 0 ? std::floor(std::log10(number_of_seconds) + 1) : 1;
-    };
     auto extract_timestamps =
-        [&]<typename T>(sensor_msgs::PointCloud2ConstIterator<T> &&it) -> std::vector<double> {
+        [&msg]<typename T>(sensor_msgs::PointCloud2ConstIterator<T> &&it) -> std::vector<double> {
         const size_t n_points = msg->height * msg->width;
         std::vector<double> timestamps;
         timestamps.reserve(n_points);
         for (size_t i = 0; i < n_points; ++i, ++it) {
-            double stampd = static_cast<double>(*it);
-            // If the number of digits is greater than 10,
+            double stamp = static_cast<double>(*it);
+            // If the stamp is larger than int32,
             // the stamp is in nanoseconds instead of seconds, perform conversion
-            if (number_of_digits_decimal_part(*it) > 10) {
-                stampd *= 1e-9;
+            if (*it > std::numeric_limits<int32_t>::max()) {
+                stamp *= 1e-9;
             }
-            timestamps.emplace_back(stampd);
+            timestamps.emplace_back(stamp);
         }
         return timestamps;
     };
