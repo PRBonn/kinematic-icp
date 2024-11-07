@@ -68,9 +68,10 @@ auto ExtractTimestampsFromMsg(const PointCloud2::ConstSharedPtr msg,
         timestamps.reserve(n_points);
         for (size_t i = 0; i < n_points; ++i, ++it) {
             double stampd = static_cast<double>(*it);
-            // If the number of digits is greater than 10,
-            // the stamp is in nanoseconds instead of seconds, perform conversion
-            if (number_of_digits_decimal_part(*it) > 10) {
+            // If the number of digits is greater than 10 (which is the maximum number of digits
+            // that can be represented with a 32 bits integer), the stamp is in nanoseconds instead
+            // of seconds, perform conversion
+            if (number_of_digits_decimal_part(stampd) > 10) {
                 stampd *= 1e-9;
             }
             timestamps.emplace_back(stampd);
