@@ -70,21 +70,27 @@ LidarOdometryServer::LidarOdometryServer(rclcpp::Node::SharedPtr node) : node_(n
         duration_cast<milliseconds>(seconds(node->declare_parameter<double>("tf_timeout", 0.0)));
 
     kinematic_icp::pipeline::Config config;
+    // Preprocessing
     config.max_range = node->declare_parameter<double>("max_range", config.max_range);
     config.min_range = node->declare_parameter<double>("min_range", config.min_range);
-    config.deskew = node->declare_parameter<bool>("deskew", config.deskew);
-    config.voxel_size = node->declare_parameter<double>("voxel_size", config.max_range / 100.0);
+    // Mapping parameters
+    config.voxel_size = node->declare_parameter<double>("voxel_size", config.voxel_size);
     config.max_points_per_voxel =
         node->declare_parameter<int>("max_points_per_voxel", config.max_points_per_voxel);
-    config.initial_threshold =
-        node->declare_parameter<double>("initial_threshold", config.initial_threshold);
-    config.min_motion_th = node->declare_parameter<double>("min_motion_th", config.min_motion_th);
+    // Correspondence threshold parameters
+    config.use_adaptive_threshold =
+        node->declare_parameter<bool>("use_adaptive_threshold", config.use_adaptive_threshold);
+    config.fixed_threshold =
+        node->declare_parameter<double>("fixed_threshold", config.fixed_threshold);
+    // Registration Parameters
     config.max_num_iterations =
         node->declare_parameter<int>("max_num_iterations", config.max_num_iterations);
     config.convergence_criterion =
         node->declare_parameter<double>("convergence_criterion", config.convergence_criterion);
     config.max_num_threads =
         node->declare_parameter<int>("max_num_threads", config.max_num_threads);
+    // Motion compensation
+    config.deskew = node->declare_parameter<bool>("deskew", config.deskew);
     if (config.max_range < config.min_range) {
         RCLCPP_WARN(node_->get_logger(),
                     "[WARNING] max_range is smaller than min_range, settng min_range to 0.0");

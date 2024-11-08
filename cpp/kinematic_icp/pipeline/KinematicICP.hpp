@@ -31,23 +31,45 @@
 #include <tuple>
 #include <vector>
 
+#include "kinematic_icp/correspondence_threshold/CorrespondenceThreshold.hpp"
 #include "kinematic_icp/registration/Registration.hpp"
-#include "kinematic_icp/threshold/AdaptiveThreshold.hpp"
 
 namespace kinematic_icp::pipeline {
 
-using Config = kiss_icp::pipeline::KISSConfig;
+struct Config {
+    // Preprocessing
+    double max_range = 100.0;
+    double min_range = 0.0;
+    // Mapping parameters
+    double voxel_size = 1.0;
+    unsigned int max_points_per_voxel = 20;
+    // Derived parameter, will be computed from other parts of the configuration
+    constexpr double map_resolution() const { return voxel_size / std::sqrt(max_points_per_voxel); }
+    // Correspondence threshold parameters
+    bool use_adaptive_threshold = true;
+    double fixed_threshold = 1.0;  // <-- Ignored if use_adaptive_threshold = true
+
+    // Registration Parameters
+    int max_num_iterations = 10;
+    double convergence_criterion = 0.001;
+    int max_num_threads = 1;
+
+    // Motion compensation
+    bool deskew = false;
+};
 
 class KinematicICP {
 public:
     using Vector3dVector = std::vector<Eigen::Vector3d>;
     using Vector3dVectorTuple = std::tuple<Vector3dVector, Vector3dVector>;
 
-    explicit KinematicICP(const kiss_icp::pipeline::KISSConfig &config)
+    explicit KinematicICP(const Config &config)
         : registration_(
               config.max_num_iterations, config.convergence_criterion, config.max_num_threads),
-          adaptive_threshold_(config.voxel_size / std::sqrt(config.max_points_per_voxel),
-                              config.max_range),
+          correspondence_threshold_(config.map_resolution(),
+                                    config.max_range,
+                                    config.use_adaptive_threshold,
+                                    config.fixed_threshold),
           config_(config),
           local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel) {}
 
@@ -59,7 +81,7 @@ public:
     inline void SetPose(const Sophus::SE3d &pose) {
         last_pose_ = pose;
         local_map_.Clear();
-        adaptive_threshold_.Reset();
+        correspondence_threshold_.Reset();
     };
 
     std::vector<Eigen::Vector3d> LocalMap() const { return local_map_.Pointcloud(); };
@@ -70,13 +92,13 @@ public:
     const Sophus::SE3d &pose() const { return last_pose_; }
     Sophus::SE3d &pose() { return last_pose_; }
 
-private:
+protected:
     Sophus::SE3d last_pose_;
     // Kinematic module
     KinematicRegistration registration_;
-    AdaptiveThreshold adaptive_threshold_;
+    CorrespondenceThreshold correspondence_threshold_;
+    Config config_;
     // KISS-ICP pipeline modules
-    kiss_icp::pipeline::KISSConfig config_;
     kiss_icp::VoxelHashMap local_map_;
 };
 

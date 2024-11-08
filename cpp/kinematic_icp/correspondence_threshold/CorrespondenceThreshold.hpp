@@ -20,34 +20,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-#include "AdaptiveThreshold.hpp"
+#pragma once
 
 #include <cmath>
 #include <sophus/se3.hpp>
 
-namespace {
-double ModelError(const Sophus::SE3d &pose, const double max_range) {
-    const double &theta = pose.so3().logAndTheta().theta;
-    const double &delta_rot = 2.0 * max_range * std::sin(theta / 2.0);
-    const double &delta_trans = pose.translation().norm();
-    return delta_trans + delta_rot;
-};
-}  // namespace
-
 namespace kinematic_icp {
-AdaptiveThreshold::AdaptiveThreshold(const double map_discretization_error, const double max_range)
-    : map_discretization_error_(map_discretization_error),
-      max_range_(max_range),
-      model_sse_(0.0),
-      num_samples_(1) {}
 
-void AdaptiveThreshold::UpdateModelError(const Sophus::SE3d &current_deviation) {
-    const double &model_error = ModelError(current_deviation, max_range_);
-    if (model_error > map_discretization_error_) {
-        const double &centered_model_error = model_error - map_discretization_error_;
-        model_sse_ += centered_model_error * centered_model_error;
-        num_samples_++;
+struct CorrespondenceThreshold {
+    explicit CorrespondenceThreshold(const double map_discretization_error,
+                                     const double max_range,
+                                     const bool use_adaptive_threshold,
+                                     const double fixed_threshold);
+
+    void UpdateModelError(const Sophus::SE3d &current_deviation);
+
+    double ComputeThreshold() const;
+
+    inline void Reset() {
+        model_sse_ = 0.0;
+        num_samples_ = 1e-8;
     }
-}
 
+    // configurable parameters
+    double map_discretization_error_;  // <-- Error introduced by the fact that we have a discrete
+                                       // set of points of the surface we are measuring
+    double max_range_;
+    bool use_adaptive_threshold_;
+    double fixed_threshold_;  // <-- Ignored if use_adaptive_threshold_ = true
+
+    // Local cache for ccomputation
+    double model_sse_;
+    double num_samples_;
+};
 }  // namespace kinematic_icp
