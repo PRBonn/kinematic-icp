@@ -26,6 +26,7 @@
 #include <string>
 
 // ROS
+#include <filesystem>
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_options.hpp>
 #include <sophus/se3.hpp>
@@ -51,8 +52,7 @@ private:
     // store data for the experiments
     using PoseWithStamp = std::pair<double, Sophus::SE3d>;
     std::vector<PoseWithStamp> poses_with_timestamps_;
-    std::string output_dir_;
-    std::string poses_filename_;
+    std::filesystem::path output_pose_file_;
 
     // Offline node specifics
     BagMultiplexer bag_multiplexer_;
