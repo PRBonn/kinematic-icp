@@ -21,9 +21,6 @@
     # Motion Compensation
     deskew: true
 
-    # Motion Compensation
-    deskew: true
-
     # Covariance diagonal values
     orientation_covariance: 0.1
     position_covariance: 0.1

@@ -103,9 +103,7 @@ protected:
     CorrespondenceThreshold correspondence_threshold_;
     Config config_;
     // KISS-ICP pipeline modules
-    kiss_icp::pipeline::KISSConfig config_;
     kiss_icp::VoxelHashMap local_map_;
-    kiss_icp::AdaptiveThreshold adaptive_threshold_;
 };
 
 }  // namespace kinematic_icp::pipeline
