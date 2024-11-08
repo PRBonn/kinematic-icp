@@ -140,15 +140,19 @@ Eigen::Vector2d ComputePerturbation(const Correspondences &correspondences,
 
 namespace kinematic_icp {
 
-KinematicRegistration::KinematicRegistration(int max_num_iteration,
-                                             double convergence_criterion,
-                                             int max_num_threads)
+KinematicRegistration::KinematicRegistration(const int max_num_iteration,
+                                             const double convergence_criterion,
+                                             const int max_num_threads,
+                                             const bool use_adaptive_odometry_regularization,
+                                             const double fixed_regularization)
     : max_num_iterations_(max_num_iteration),
       convergence_criterion_(convergence_criterion),
       // Only manipulate the number of threads if the user specifies something
       // greater than 0
       max_num_threads_(max_num_threads > 0 ? max_num_threads
-                                           : tbb::this_task_arena::max_concurrency()) {
+                                           : tbb::this_task_arena::max_concurrency()),
+      use_adaptive_odometry_regularization_(use_adaptive_odometry_regularization),
+      fixed_regularization_(fixed_regularization) {
     // This global variable requires static duration storage to be able to
     // manipulate the max concurrency from TBB across the entire class
     static const auto tbb_control_settings = tbb::global_control(
@@ -175,8 +179,13 @@ Sophus::SE3d KinematicRegistration::ComputeRobotMotion(const std::vector<Eigen::
     auto correspondences =
         DataAssociation(frame, voxel_map, current_estimate, max_correspondence_distance);
 
-    const double regularization_term =
-        ComputeOdometryRegularization(correspondences, current_estimate);
+    const double regularization_term = [&]() {
+        if (use_adaptive_odometry_regularization_) {
+            return ComputeOdometryRegularization(correspondences, current_estimate);
+        } else {
+            return fixed_regularization_;
+        }
+    }();
     // ICP-loop
     for (int j = 0; j < max_num_iterations_; ++j) {
         const auto dx = ComputePerturbation(correspondences, current_estimate, regularization_term);

@@ -89,6 +89,10 @@ LidarOdometryServer::LidarOdometryServer(rclcpp::Node::SharedPtr node) : node_(n
         node->declare_parameter<double>("convergence_criterion", config.convergence_criterion);
     config.max_num_threads =
         node->declare_parameter<int>("max_num_threads", config.max_num_threads);
+    config.use_adaptive_odometry_regularization = node->declare_parameter<bool>(
+        "use_adaptive_odometry_regularization", config.use_adaptive_odometry_regularization);
+    config.fixed_regularization =
+        node->declare_parameter<double>("fixed_regularization", config.fixed_regularization);
     // Motion compensation
     config.deskew = node->declare_parameter<bool>("deskew", config.deskew);
     if (config.max_range < config.min_range) {

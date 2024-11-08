@@ -15,6 +15,8 @@
     max_num_iterations: 10
     convergence_criterion: 0.001
     max_num_threads: 1
+    use_adaptive_odometry_regularization: true
+    fixed_regularization: 0.0 # Ignored if use_adaptive_odometry_regularization=true
 
     # Motion Compensation
     deskew: true
