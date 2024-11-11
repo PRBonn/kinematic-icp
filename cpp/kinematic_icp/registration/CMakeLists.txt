@@ -20,6 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-add_library(kinematic_icp_registration Registration.cpp)
-target_link_libraries(kinematic_icp_registration kiss_icp_core Eigen3::Eigen TBB::tbb Sophus::Sophus)
+add_library(kinematic_icp_registration STATIC)
+target_sources(kinematic_icp_registration PRIVATE Registration.cpp)
+target_link_libraries(kinematic_icp_registration PUBLIC kiss_icp_core Eigen3::Eigen TBB::tbb Sophus::Sophus)
 set_global_target_properties(kinematic_icp_registration)
