@@ -26,7 +26,7 @@
 #include <sophus/se3.hpp>
 
 namespace {
-double ModelError(const Sophus::SE3d &pose, const double max_range) {
+double OdometryErrorInPointSpace(const Sophus::SE3d &pose, const double max_range) {
     const double &theta = pose.so3().logAndTheta().theta;
     const double &delta_rot = 2.0 * max_range * std::sin(theta / 2.0);
     const double &delta_trans = pose.translation().norm();
@@ -43,22 +43,23 @@ CorrespondenceThreshold::CorrespondenceThreshold(const double map_discretization
       max_range_(max_range),
       use_adaptive_threshold_(use_adaptive_threshold),
       fixed_threshold_(fixed_threshold),
-      model_sse_(0.0),
+      odom_sse_(0.0),
       num_samples_(1e-8) {}
 
 double CorrespondenceThreshold::ComputeThreshold() const {
     if (!use_adaptive_threshold_) return fixed_threshold_;
 
-    const double moder_error_variance = std::sqrt(model_sse_ / num_samples_);
-    const double adaptive_threshold = 3.0 * (map_discretization_error_ + moder_error_variance);
+    const double sigma_odom = std::sqrt(odom_sse_ / num_samples_);
+    const double &sigma_map = map_discretization_error_;  // <-- Renaming for clarity
+    const double adaptive_threshold = 3.0 * (sigma_map + sigma_odom);
     return adaptive_threshold;
 }
 
-void CorrespondenceThreshold::UpdateModelError(const Sophus::SE3d &current_deviation) {
+void CorrespondenceThreshold::UpdateOdometryError(const Sophus::SE3d &odometry_error) {
     if (!use_adaptive_threshold_) return;
 
-    const double &model_error = ModelError(current_deviation, max_range_);
-    model_sse_ += model_error * model_error;
+    const double &odom_error_in_point_space = OdometryErrorInPointSpace(odometry_error, max_range_);
+    odom_sse_ += odom_error_in_point_space * odom_error_in_point_space;
     num_samples_ += 1.0;
 }
 
