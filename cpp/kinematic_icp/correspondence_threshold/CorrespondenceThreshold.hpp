@@ -49,7 +49,7 @@ struct CorrespondenceThreshold {
     bool use_adaptive_threshold_;
     double fixed_threshold_;  // <-- Ignored if use_adaptive_threshold_ = true
 
-    // Local cache for ccomputation
+    // Local cache for computation
     double model_sse_;
     double num_samples_;
 };
