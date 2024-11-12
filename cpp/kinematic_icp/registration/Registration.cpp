@@ -37,6 +37,8 @@
 #include <sophus/so3.hpp>
 #include <tuple>
 
+#include "kinematic_icp/preprocessing/StampedPointCloud.hpp"
+
 using LinearSystem = std::pair<Eigen::Matrix2d, Eigen::Vector2d>;
 using Correspondences = std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>;
 
@@ -57,7 +59,7 @@ double ComputeOdometryRegularization(const Correspondences &associations,
     return beta;
 }
 
-Correspondences DataAssociation(const std::vector<Eigen::Vector3d> &points,
+Correspondences DataAssociation(const kinematic_icp::StampedPointCloud &points,
                                 const kiss_icp::VoxelHashMap &voxel_map,
                                 const Sophus::SE3d &T,
                                 const double max_correspondance_distance) {
@@ -73,9 +75,10 @@ Correspondences DataAssociation(const std::vector<Eigen::Vector3d> &points,
         [&](const tbb::blocked_range<points_iterator> &r, Correspondences res) -> Correspondences {
             res.reserve(r.size());
             std::for_each(r.begin(), r.end(), [&](const auto &point) {
-                const auto &[closest_neighbor, distance] = voxel_map.GetClosestNeighbor(T * point);
+                const auto &[closest_neighbor, distance] =
+                    voxel_map.GetClosestNeighbor(T * point.coordinates);
                 if (distance < max_correspondance_distance) {
-                    res.emplace_back(point, closest_neighbor);
+                    res.emplace_back(point.coordinates, closest_neighbor);
                 }
             });
             return res;
@@ -159,11 +162,12 @@ KinematicRegistration::KinematicRegistration(const int max_num_iteration,
         tbb::global_control::max_allowed_parallelism, static_cast<size_t>(max_num_threads_));
 }
 
-Sophus::SE3d KinematicRegistration::ComputeRobotMotion(const std::vector<Eigen::Vector3d> &frame,
-                                                       const kiss_icp::VoxelHashMap &voxel_map,
-                                                       const Sophus::SE3d &last_robot_pose,
-                                                       const Sophus::SE3d &relative_wheel_odometry,
-                                                       const double max_correspondence_distance) {
+Sophus::SE3d KinematicRegistration::ComputeRobotMotion(
+    const kinematic_icp::StampedPointCloud &frame,
+    const kiss_icp::VoxelHashMap &voxel_map,
+    const Sophus::SE3d &last_robot_pose,
+    const Sophus::SE3d &relative_wheel_odometry,
+    const double max_correspondence_distance) {
     Sophus::SE3d current_estimate = last_robot_pose * relative_wheel_odometry;
     if (voxel_map.Empty()) return current_estimate;
 

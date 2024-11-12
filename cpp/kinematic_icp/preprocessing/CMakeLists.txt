@@ -21,6 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 add_library(kinematic_icp_preprocessing STATIC)
-target_sources(kinematic_icp_preprocessing PRIVATE Preprocessing.cpp)
+target_sources(kinematic_icp_preprocessing PRIVATE StampedPointCloud.cpp Preprocessing.cpp)
 target_link_libraries(kinematic_icp_preprocessing PUBLIC Sophus::Sophus Eigen3::Eigen)
 set_global_target_properties(kinematic_icp_preprocessing)

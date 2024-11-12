@@ -29,47 +29,28 @@
 #include <kiss_icp/core/VoxelHashMap.hpp>
 #include <vector>
 
-namespace {
-auto transform_points(const std::vector<Eigen::Vector3d> &points, const Sophus::SE3d &pose) {
-    std::vector<Eigen::Vector3d> points_transformed(points.size());
-    std::transform(points.cbegin(), points.cend(), points_transformed.begin(),
-                   [&](const auto &point) { return pose * point; });
-    return points_transformed;
-}
+#include "kinematic_icp/preprocessing/Preprocessing.hpp"
+#include "kinematic_icp/preprocessing/StampedPointCloud.hpp"
 
-auto Voxelize(const std::vector<Eigen::Vector3d> &frame, const double voxel_size) {
-    const std::vector<Eigen::Vector3d> &frame_downsample =
-        kiss_icp::VoxelDownsample(frame, voxel_size * 0.5);
-    const std::vector<Eigen::Vector3d> &source =
-        kiss_icp::VoxelDownsample(frame_downsample, voxel_size * 1.5);
-    return std::make_tuple(source, frame_downsample);
-}
-}  // namespace
 namespace kinematic_icp::pipeline {
 
-KinematicICP::Vector3dVectorTuple KinematicICP::RegisterFrame(
-    const std::vector<Eigen::Vector3d> &frame,
-    const std::vector<double> &timestamps,
+KinematicICP::StampedPointCloudTuple KinematicICP::RegisterFrame(
+    const StampedPointCloud &stamped_frame,
     const Sophus::SE3d &lidar_to_base,
     const Sophus::SE3d &relative_odometry) {
-    const auto &deskew_frame = [&]() -> std::vector<Eigen::Vector3d> {
-        if (!config_.deskew || timestamps.empty()) return frame;
-        return kiss_icp::DeSkewScan(frame, timestamps,
-                                    lidar_to_base.inverse() * relative_odometry * lidar_to_base);
-    }();
-    const auto &deskew_frame_in_base = transform_points(deskew_frame, lidar_to_base);
     // Preprocess the input cloud
     const auto &cropped_frame =
-        kiss_icp::Preprocess(deskew_frame_in_base, config_.max_range, config_.min_range);
+        ClipMinMaxRange(stamped_frame, config_.max_range, config_.min_range);
 
-    // Voxelize
-    const auto &[source, frame_downsample] = Voxelize(cropped_frame, config_.voxel_size);
-
+    const auto &mapping_frame = VoxelDownsample(cropped_frame, config_.voxel_size * 0.5);
+    const auto &registration_frame = VoxelDownsample(mapping_frame, config_.voxel_size * 1.5);
+    const auto &deskewed_registration_frame =
+        config_.deskew ? DeSkew(registration_frame, relative_odometry) : registration_frame;
     // Get adaptive_threshold
     const double &tau = correspondence_threshold_.ComputeThreshold();
 
     // Run ICP
-    const auto new_pose = registration_.ComputeRobotMotion(source,             // frame
+    const auto new_pose = registration_.ComputeRobotMotion(deskewed_registration_frame,  // frame
                                                            local_map_,         // voxel_map
                                                            last_pose_,         // last_pose
                                                            relative_odometry,  // robot_motion
@@ -80,11 +61,14 @@ KinematicICP::Vector3dVectorTuple KinematicICP::RegisterFrame(
 
     // Update step: threshold, local map and the last pose
     correspondence_threshold_.UpdateModelError(model_deviation);
-    local_map_.Update(frame_downsample, new_pose);
+    const auto estimated_relative_motion = last_pose_.inverse() * new_pose;
+    const auto &deskewed_mapping_frame =
+        config_.deskew ? DeSkew(mapping_frame, estimated_relative_motion) : mapping_frame;
+    local_map_.Update(deskewed_mapping_frame, new_pose);
     last_pose_ = new_pose;
 
     // Return the (deskew) input raw scan (frame) and the points used for
     // registration (source)
-    return {deskew_frame_in_base, source};
+    return {deskewed_mapping_frame, deskewed_registration_frame};
 }
 }  // namespace kinematic_icp::pipeline

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <kinematic_icp/preprocessing/StampedPointCloud.hpp>
 #include <kiss_icp/core/VoxelHashMap.hpp>
 #include <sophus/se3.hpp>
 #include <vector>
@@ -36,7 +37,7 @@ struct KinematicRegistration {
                                    const bool use_adaptive_odometry_regularization,
                                    const double fixed_regularization);
 
-    Sophus::SE3d ComputeRobotMotion(const std::vector<Eigen::Vector3d> &frame,
+    Sophus::SE3d ComputeRobotMotion(const StampedPointCloud &frame,
                                     const kiss_icp::VoxelHashMap &voxel_map,
                                     const Sophus::SE3d &last_robot_pose,
                                     const Sophus::SE3d &relative_wheel_odometry,

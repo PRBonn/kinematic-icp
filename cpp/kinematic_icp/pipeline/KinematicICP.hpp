@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "kinematic_icp/correspondence_threshold/CorrespondenceThreshold.hpp"
+#include "kinematic_icp/preprocessing/StampedPointCloud.hpp"
 #include "kinematic_icp/registration/Registration.hpp"
 
 namespace kinematic_icp::pipeline {
@@ -62,8 +63,7 @@ struct Config {
 
 class KinematicICP {
 public:
-    using Vector3dVector = std::vector<Eigen::Vector3d>;
-    using Vector3dVectorTuple = std::tuple<Vector3dVector, Vector3dVector>;
+    using StampedPointCloudTuple = std::tuple<StampedPointCloud, StampedPointCloud>;
 
     explicit KinematicICP(const Config &config)
         : registration_(config.max_num_iterations,
@@ -78,10 +78,9 @@ public:
           config_(config),
           local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel) {}
 
-    Vector3dVectorTuple RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
-                                      const std::vector<double> &timestamps,
-                                      const Sophus::SE3d &lidar_to_base,
-                                      const Sophus::SE3d &relative_odometry);
+    StampedPointCloudTuple RegisterFrame(const StampedPointCloud &stamped_frame,
+                                         const Sophus::SE3d &lidar_to_base,
+                                         const Sophus::SE3d &relative_odometry);
 
     inline void SetPose(const Sophus::SE3d &pose) {
         last_pose_ = pose;

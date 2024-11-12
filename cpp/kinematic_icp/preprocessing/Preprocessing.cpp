@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-#include "kinematic_icp/preprocessing/PointCloud.hpp"
+#include "StampedPointCloud.hpp"
 
 namespace {
 Eigen::Vector3i PointToVoxel(const Eigen::Vector3d &point, const double voxel_size) {

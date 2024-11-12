@@ -1,5 +1,5 @@
 #pragma once
-#include "PointCloud.hpp"
+#include "StampedPointCloud.hpp"
 
 namespace kinematic_icp {
 

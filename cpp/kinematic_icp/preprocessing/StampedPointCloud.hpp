@@ -7,8 +7,7 @@ namespace kinematic_icp {
 
 struct StampedPoint {
     StampedPoint() = default;
-    StampedPoint(const Eigen::Vector3d &point, const double stamp)
-        : coordinates(point), timestamp(stamp){};
+    StampedPoint(const Eigen::Vector3d &point, const double stamp);
 
     Eigen::Vector3d coordinates = Eigen::Vector3d::Zero();
     double timestamp = 0.0;
