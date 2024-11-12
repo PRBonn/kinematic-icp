@@ -47,9 +47,11 @@ CorrespondenceThreshold::CorrespondenceThreshold(const double map_discretization
       num_samples_(1e-8) {}
 
 double CorrespondenceThreshold::ComputeThreshold() const {
+    if (!use_adaptive_threshold_) return fixed_threshold_;
+
     const double moder_error_variance = std::sqrt(model_sse_ / num_samples_);
     const double adaptive_threshold = 3.0 * (map_discretization_error_ + moder_error_variance);
-    return use_adaptive_threshold_ ? adaptive_threshold : fixed_threshold_;
+    return adaptive_threshold;
 }
 
 void CorrespondenceThreshold::UpdateModelError(const Sophus::SE3d &current_deviation) {
