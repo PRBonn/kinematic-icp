@@ -66,7 +66,7 @@ KinematicICP::Vector3dVectorTuple KinematicICP::RegisterFrame(
     const auto &[source, frame_downsample] = Voxelize(cropped_frame, config_.voxel_size);
 
     // Get adaptive_threshold
-    const double &tau = correspondence_threshold_.ComputeThreshold();
+    const double tau = correspondence_threshold_.ComputeThreshold();
 
     // Run ICP
     const auto new_pose = registration_.ComputeRobotMotion(source,             // frame
