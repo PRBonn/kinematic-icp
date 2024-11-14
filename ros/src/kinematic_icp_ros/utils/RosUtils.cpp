@@ -30,7 +30,8 @@ namespace kinematic_icp_ros::utils {
 std::optional<PointField> GetTimestampField(const PointCloud2::ConstSharedPtr msg) {
     PointField timestamp_field;
     for (const auto &field : msg->fields) {
-        if ((field.name == "t" || field.name == "timestamp" || field.name == "time")) {
+        if ((field.name == "t" || field.name == "timestamp" || field.name == "time" ||
+             field.name == "stamps")) {
             timestamp_field = field;
         }
     }
@@ -61,6 +62,7 @@ auto ExtractTimestampsFromMsg(const PointCloud2::ConstSharedPtr msg,
         const uint64_t number_of_seconds = static_cast<uint64_t>(std::round(stamp));
         return number_of_seconds > 0 ? std::floor(std::log10(number_of_seconds) + 1) : 1;
     };
+    const double msg_stamp_in_sec = rclcpp::Time(msg->header.stamp).nanoseconds() * 1e-9;
     auto extract_timestamps =
         [&]<typename T>(sensor_msgs::PointCloud2ConstIterator<T> &&it) -> std::vector<double> {
         const size_t n_points = msg->height * msg->width;
@@ -73,6 +75,9 @@ auto ExtractTimestampsFromMsg(const PointCloud2::ConstSharedPtr msg,
             // of seconds, perform conversion
             if (number_of_digits_decimal_part(stampd) > 10) {
                 stampd *= 1e-9;
+            }
+            if (stampd < msg_stamp_in_sec) {
+                stampd += msg_stamp_in_sec;
             }
             timestamps.emplace_back(stampd);
         }
