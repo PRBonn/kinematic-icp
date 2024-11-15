@@ -110,27 +110,27 @@ std::tuple<StampType, StampType, std::vector<double>> TimeStampHandler::ProcessT
     std::vector<double> timestamps = GetTimestamps(msg);
     const auto &[min_it, max_it] = std::minmax_element(timestamps.cbegin(), timestamps.cend());
     const StampType msg_stamp = msg->header.stamp;
-    const StampType begin_scan_stamp = last_processed_stamp_;
-    StampType end_scan_stamp = msg_stamp;
+    const StampType begin_stamp = last_processed_stamp_;
+    StampType end_stamp = msg_stamp;
     if (max_it != timestamps.cend()) {
-        // Normalize timestamps
         const double &max_stamp_in_seconds = *max_it;
         const double &min_stamp_in_seconds = *min_it;
-        std::transform(timestamps.cbegin(), timestamps.cend(), timestamps.begin(),
-                       [&](const auto &timestamp) {
-                           return (timestamp - min_stamp_in_seconds) /
-                                  (max_stamp_in_seconds - min_stamp_in_seconds);
-                       });
         // Check if stamping happen and the beginning or the end of scan
         const double msg_stamp_in_seconds = this->toTime(msg_stamp);
         if (max_stamp_in_seconds > msg_stamp_in_seconds) {
             const auto scan_duration =
                 tf2::durationFromSec(max_stamp_in_seconds - min_stamp_in_seconds);
-            end_scan_stamp = StampType(rclcpp::Time(end_scan_stamp) + scan_duration);
+            end_stamp = StampType(rclcpp::Time(end_stamp) + scan_duration);
         }
+        // Normalize timestamps
+        std::transform(timestamps.cbegin(), timestamps.cend(), timestamps.begin(),
+                       [&](const auto &timestamp) {
+                           return (timestamp - min_stamp_in_seconds) /
+                                  (max_stamp_in_seconds - min_stamp_in_seconds);
+                       });
     }
-    last_processed_stamp_ = end_scan_stamp;
-    return std::make_tuple(begin_scan_stamp, end_scan_stamp, timestamps);
+    last_processed_stamp_ = end_stamp;
+    return std::make_tuple(begin_stamp, end_stamp, timestamps);
 }
 
 }  // namespace kinematic_icp_ros::utils
