@@ -192,10 +192,10 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
     const auto begin_scan_stamp = min_it != timestamps.cend() ? toStamp(*min_it) : last_stamp;
     const auto end_scan_stamp = max_it != timestamps.cend() ? toStamp(*max_it) : msg->header.stamp;
     current_stamp_ = end_scan_stamp;
+
     // Get the initial guess from the wheel odometry
-    const auto delta =
-        LookupDeltaTransform(base_frame_, last_stamp_, base_frame_, end_scan_stamp,
-                             wheel_odom_frame_, tf_timeout_, tf2_buffer_);
+    const auto delta = LookupDeltaTransform(base_frame_, last_stamp_, base_frame_, current_stamp_,
+                                            wheel_odom_frame_, tf_timeout_, tf2_buffer_);
 
     // Run kinematic ICP
     if (delta.log().norm() > 1e-3) {
