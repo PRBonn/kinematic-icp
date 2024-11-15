@@ -184,7 +184,7 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
     // Extract timestamps
     const auto timestamps = GetTimestamps(msg);
     const auto &[min_it, max_it] = std::minmax_element(timestamps.cbegin(), timestamps.cend());
-    
+
     // Todo: Move everything to a separate unit
     auto toStamp = [](const double &time) -> builtin_interfaces::msg::Time {
         return rclcpp::Time(tf2::durationFromSec(time).count());
