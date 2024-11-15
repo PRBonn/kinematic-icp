@@ -184,21 +184,25 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
     // Extract timestamps
     const auto timestamps = GetTimestamps(msg);
     const auto &[min_it, max_it] = std::minmax_element(timestamps.cbegin(), timestamps.cend());
-    // From double to ROS TimeStamp
+    
+    // Todo: Move everything to a separate unit
     auto toStamp = [](const double &time) -> builtin_interfaces::msg::Time {
         return rclcpp::Time(tf2::durationFromSec(time).count());
+    };
+    auto toTime = [](const builtin_interfaces::msg::Time &stamp) -> double {
+        return rclcpp::Time(stamp).nanoseconds() * 1e-9;
     };
 
     // Get scan duration and current stamp
     const auto begin_scan_time = min_it != timestamps.cend() ? *min_it : toTime(last_stamp);
     const auto end_scan_time = max_it != timestamps.cend() ? *max_it : toTime(msg->header.stamp);
-    const double scan_duration = std::abs(end_scan_stamp - begin_scan_stamp);
+    const double scan_duration = std::abs(end_scan_time - begin_scan_time);
     current_stamp_ = begin_scan_time < toTime(last_stamp)
-                         ? toStamp(toTime(last_stamp_) + scan_duration)
-                         : end_scan_stamp;
+                         ? toStamp(toTime(last_stamp) + scan_duration)
+                         : toStamp(end_scan_time);
 
     // Get the initial guess from the wheel odometry
-    const auto delta = LookupDeltaTransform(base_frame_, last_stamp_, base_frame_, current_stamp_,
+    const auto delta = LookupDeltaTransform(base_frame_, last_stamp, base_frame_, current_stamp_,
                                             wheel_odom_frame_, tf_timeout_, tf2_buffer_);
 
     // Run kinematic ICP
@@ -211,9 +215,6 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
         PublishClouds(frame, kpoints);
     }
 
-    auto toTime = [](const builtin_interfaces::msg::Time &stamp) -> double {
-        return rclcpp::Time(stamp).nanoseconds() * 1e-9;
-    };
     // Compute velocities, use the elapsed time between the current msg and the last received
     const double elapsed_time = toTime(current_stamp_) - toTime(last_stamp);
     const Sophus::SE3d::Tangent delta_twist = (last_pose.inverse() * kinematic_icp_->pose()).log();
