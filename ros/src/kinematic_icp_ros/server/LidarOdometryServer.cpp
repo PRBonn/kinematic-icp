@@ -188,10 +188,13 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
     auto toStamp = [](const double &time) -> builtin_interfaces::msg::Time {
         return rclcpp::Time(tf2::durationFromSec(time).count());
     };
-    // Update what is the current stamp of this iteration
-    const auto begin_scan_stamp = min_it != timestamps.cend() ? toStamp(*min_it) : last_stamp;
-    const auto end_scan_stamp = max_it != timestamps.cend() ? toStamp(*max_it) : msg->header.stamp;
-    current_stamp_ = end_scan_stamp;
+
+    // Get scan duration and current stamp
+    const auto begin_scan_time = min_it != timestamps.cend() ? *min_it : toTime(last_stamp);
+    const auto end_scan_time = max_it != timestamps.cend() ? *max_it : toTime(msg->header.stamp);
+    const double scan_duration = end_scan_stamp - begin_scan_stamp;
+    current_stamp_ = begin_scan_time < toTime(last_stamp) ? toStamp(last_stamp_) + scan_duration
+                                                          : toStamp(end_scan_stamp);
 
     // Get the initial guess from the wheel odometry
     const auto delta = LookupDeltaTransform(base_frame_, last_stamp_, base_frame_, current_stamp_,
