@@ -41,6 +41,7 @@ struct TimeStampHandler {
     inline StampType toStamp(const double &time_in_seconds) const {
         return rclcpp::Time(tf2::durationFromSec(time_in_seconds).count());
     };
+    // From ROS TimeStamp to double
     inline double toTime(const StampType &stamp) const {
         return rclcpp::Time(stamp).nanoseconds() * 1e-9;
     };
