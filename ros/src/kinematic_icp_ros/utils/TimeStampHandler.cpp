@@ -116,13 +116,13 @@ std::tuple<StampType, StampType, std::vector<double>> TimeStampHandler::ProcessT
         const double &min_stamp_in_seconds = *min_it;
         const double msg_stamp_in_seconds = this->toTime(msg_stamp);
 
-        // Check if stamping happens and the beginning or the end of scan
         double deskewing_endpoint_stamp = min_stamp_in_seconds;
         const double scan_duration_in_seconds = max_stamp_in_seconds - min_stamp_in_seconds;
+        // Check if stamping happens and the beginning or the end of scan
         if (std::abs(msg_stamp_in_seconds - max_stamp_in_seconds) < 1e-8) {
             // end-stamping -> we need to create the timestamps for deskewing considering that the
-            // latest stamped point is the end-point of the deskewing
-            deskewing_endpoint_stamp = max_stamp_in_seconds;
+            // latest stamp is the end-point of the deskewing
+            deskewing_endpoint_stamp = msg_stamp_in_seconds;
         } else {
             // begin-stamping -> add scan duration to the stamp
             const auto scan_duration = tf2::durationFromSec(scan_duration_in_seconds);
