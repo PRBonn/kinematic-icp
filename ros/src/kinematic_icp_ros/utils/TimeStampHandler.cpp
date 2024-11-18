@@ -100,7 +100,6 @@ std::vector<double> GetTimestamps(const PointCloud2::ConstSharedPtr msg) {
 
     return timestamps;
 }
-
 }  // namespace
 
 namespace kinematic_icp_ros::utils {
@@ -117,15 +116,21 @@ std::tuple<StampType, StampType, std::vector<double>> TimeStampHandler::ProcessT
         const double &min_stamp_in_seconds = *min_it;
         // Check if stamping happen and the beginning or the end of scan
         const double msg_stamp_in_seconds = this->toTime(msg_stamp);
-        if (max_stamp_in_seconds > msg_stamp_in_seconds) {
+        double begin_normalization = min_stamp_in_seconds;
+        if (msg_stamp_in_seconds < max_stamp_in_seconds) {
+            // begin + absolute stamping -> add scan duration to the stamp
             const auto scan_duration =
                 tf2::durationFromSec(max_stamp_in_seconds - min_stamp_in_seconds);
             end_stamp = StampType(rclcpp::Time(end_stamp) + scan_duration);
+        } else if (std::abs(msg_stamp_in_seconds - max_stamp_in_seconds) < 1e-8) {
+            // end-stamping + absolute stamping -> need to put negative normalized timestamps for
+            // deskewing
+            begin_normalization = msg_stamp_in_seconds;
         }
         // Normalize timestamps
         std::transform(timestamps.cbegin(), timestamps.cend(), timestamps.begin(),
                        [&](const auto &timestamp) {
-                           return (timestamp - min_stamp_in_seconds) /
+                           return (timestamp - begin_normalization) /
                                   (max_stamp_in_seconds - min_stamp_in_seconds);
                        });
     }
