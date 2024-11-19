@@ -3,20 +3,23 @@
     # Preprocessing
     max_range: 100.0
     min_range: 0.0
-    deskew: true
-
     # Mapping parameters
     voxel_size: 1.0
     max_points_per_voxel: 20
 
-    # Adaptive threshold
-    initial_threshold: 2.0
-    min_motion_th: 0.1
+    # Correspondence threshold parameters
+    use_adaptive_threshold: true
+    fixed_threshold: 1.0 # Ignored if use_adaptive_threshold=true
 
-    # Registration
+    # Registration Parameters
     max_num_iterations: 10
     convergence_criterion: 0.001
     max_num_threads: 1
+    use_adaptive_odometry_regularization: true
+    fixed_regularization: 0.0 # Ignored if use_adaptive_odometry_regularization=true
+
+    # Motion Compensation
+    deskew: true
 
     # Covariance diagonal values
     orientation_covariance: 0.1

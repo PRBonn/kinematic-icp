@@ -54,5 +54,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CompilerOptions.cmake)
 
+add_subdirectory(correspondence_threshold)
 add_subdirectory(registration)
 add_subdirectory(pipeline)
