@@ -30,9 +30,11 @@
 namespace kinematic_icp {
 
 struct KinematicRegistration {
-    explicit KinematicRegistration(int max_num_iteration,
-                                   double convergence_criterion,
-                                   int max_num_threads);
+    explicit KinematicRegistration(const int max_num_iteration,
+                                   const double convergence_criterion,
+                                   const int max_num_threads,
+                                   const bool use_adaptive_odometry_regularization,
+                                   const double fixed_regularization);
 
     Sophus::SE3d ComputeRobotMotion(const std::vector<Eigen::Vector3d> &frame,
                                     const kiss_icp::VoxelHashMap &voxel_map,
@@ -43,5 +45,7 @@ struct KinematicRegistration {
     int max_num_iterations_;
     double convergence_criterion_;
     int max_num_threads_;
+    bool use_adaptive_odometry_regularization_;
+    double fixed_regularization_;
 };
 }  // namespace kinematic_icp

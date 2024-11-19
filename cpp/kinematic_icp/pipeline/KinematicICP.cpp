@@ -66,7 +66,7 @@ KinematicICP::Vector3dVectorTuple KinematicICP::RegisterFrame(
     const auto &[source, frame_downsample] = Voxelize(cropped_frame, config_.voxel_size);
 
     // Get adaptive_threshold
-    const double &tau = correspondence_threshold_.ComputeThreshold();
+    const double tau = correspondence_threshold_.ComputeThreshold();
 
     // Run ICP
     const auto new_pose = registration_.ComputeRobotMotion(source,             // frame
@@ -76,10 +76,10 @@ KinematicICP::Vector3dVectorTuple KinematicICP::RegisterFrame(
                                                            tau);  // max_correspondence_dist
 
     // Compute the difference between the prediction and the actual estimate
-    const auto model_deviation = (last_pose_ * relative_odometry).inverse() * new_pose;
+    const auto odometry_error = (last_pose_ * relative_odometry).inverse() * new_pose;
 
     // Update step: threshold, local map and the last pose
-    correspondence_threshold_.UpdateModelError(model_deviation);
+    correspondence_threshold_.UpdateOdometryError(odometry_error);
     local_map_.Update(frame_downsample, new_pose);
     last_pose_ = new_pose;
 
