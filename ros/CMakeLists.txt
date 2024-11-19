@@ -60,8 +60,8 @@ set(dependencies
 add_library(
   kinematic_icp_ros SHARED
   src/kinematic_icp_ros/server/LidarOdometryServer.cpp src/kinematic_icp_ros/utils/RosUtils.cpp
-  src/kinematic_icp_ros/utils/RosbagUtils.cpp src/kinematic_icp_ros/nodes/online_node.cpp
-)# Adding it here for composition
+  src/kinematic_icp_ros/utils/RosbagUtils.cpp src/kinematic_icp_ros/utils/TimeStampHandler.cpp
+  src/kinematic_icp_ros/nodes/online_node.cpp) # Adding it here for composition
 target_compile_features(kinematic_icp_ros PUBLIC cxx_std_17)
 target_include_directories(kinematic_icp_ros PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(kinematic_icp_ros kinematic_icp_pipeline "${cpp_typesupport_target}")

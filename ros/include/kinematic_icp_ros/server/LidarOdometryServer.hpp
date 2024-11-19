@@ -23,6 +23,7 @@
 #pragma once
 
 #include "kinematic_icp/pipeline/KinematicICP.hpp"
+#include "kinematic_icp_ros/utils/TimeStampHandler.hpp"
 
 // ROS 2 C
 #include <tf2_ros/buffer.h>
@@ -30,7 +31,6 @@
 #include <tf2_ros/transform_listener.h>
 
 // ROS 2 C++
-#include <builtin_interfaces/msg/time.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/time.hpp>
@@ -57,7 +57,7 @@ public:
     /// Register new frame
     void RegisterFrame(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg);
     std::unique_ptr<kinematic_icp::pipeline::KinematicICP> kinematic_icp_;
-    builtin_interfaces::msg::Time current_stamp_;
+    utils::TimeStampHandler timestamps_handler_;
 
 private:
     /// Stream the estimated pose to ROS
