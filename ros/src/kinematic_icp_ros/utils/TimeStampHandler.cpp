@@ -116,11 +116,13 @@ std::tuple<StampType, StampType, std::vector<double>> TimeStampHandler::ProcessT
         const double &min_stamp_in_seconds = *min_it;
         const double msg_stamp_in_seconds = this->toTime(msg_stamp);
 
-        const double scan_duration_in_seconds = max_stamp_in_seconds - min_stamp_in_seconds;
         // Check if stamping happens and the beginning or the end of scan
-        if (std::abs(msg_stamp_in_seconds - max_stamp_in_seconds) > 1e-8) {
+        const bool is_stamped_at_the_beginning =
+            std::abs(msg_stamp_in_seconds - max_stamp_in_seconds) > 1e-8;
+        if (is_stamped_at_the_beginning) {
             // begin-stamping -> add scan duration to the stamp
-            const auto scan_duration = tf2::durationFromSec(scan_duration_in_seconds);
+            const auto scan_duration =
+                tf2::durationFromSec(max_stamp_in_seconds - min_stamp_in_seconds);
             end_stamp = StampType(rclcpp::Time(end_stamp) + scan_duration);
         }
 
