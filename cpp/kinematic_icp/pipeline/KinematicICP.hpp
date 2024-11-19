@@ -54,7 +54,7 @@ struct Config {
     double convergence_criterion = 0.001;
     int max_num_threads = 1;
     bool use_adaptive_odometry_regularization = true;
-    double fixed_regularization = 1.0;  // <-- Ignored if use_adaptive_threshold = true
+    double fixed_regularization = 0.0;  // <-- Ignored if use_adaptive_threshold = true
 
     // Motion compensation
     bool deskew = false;
