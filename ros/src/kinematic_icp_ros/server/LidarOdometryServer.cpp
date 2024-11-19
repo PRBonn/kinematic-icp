@@ -179,7 +179,7 @@ void LidarOdometryServer::InitializePoseAndExtrinsic(
 
     // Initialization finished
     RCLCPP_INFO(node_->get_logger(), "KISS-ICP ROS 2 odometry node initialized");
-    current_stamp_ = msg->header.stamp;
+    timestamps_handler_.last_processed_stamp_ = msg->header.stamp;
     initialize_odom_node = true;
 }
 
@@ -189,39 +189,27 @@ void LidarOdometryServer::RegisterFrame(const sensor_msgs::msg::PointCloud2::Con
     }
 
     // Buffer the last state This will be used for computing the veloicty
-    const auto last_stamp = current_stamp_;
     const auto last_pose = kinematic_icp_->pose();
-    // Extract timestamps
-    const auto timestamps = GetTimestamps(msg);
-    const auto &[min_it, max_it] = std::minmax_element(timestamps.cbegin(), timestamps.cend());
-    // From double to ROS TimeStamp
-    auto toStamp = [](const double &time) -> builtin_interfaces::msg::Time {
-        return rclcpp::Time(tf2::durationFromSec(time).count());
-    };
-    // Update what is the current stamp of this iteration
-    const auto begin_scan_stamp = min_it != timestamps.cend() ? toStamp(*min_it) : last_stamp;
-    const auto end_scan_stamp = max_it != timestamps.cend() ? toStamp(*max_it) : msg->header.stamp;
-    current_stamp_ = end_scan_stamp;
+    const auto &[begin_odom_query, end_odom_query, timestamps] =
+        timestamps_handler_.ProcessTimestamps(msg);
+
     // Get the initial guess from the wheel odometry
     const auto delta =
-        LookupDeltaTransform(base_frame_, begin_scan_stamp, base_frame_, end_scan_stamp,
+        LookupDeltaTransform(base_frame_, begin_odom_query, base_frame_, end_odom_query,
                              wheel_odom_frame_, tf_timeout_, tf2_buffer_);
 
     // Run kinematic ICP
     if (delta.log().norm() > 1e-3) {
         const auto &extrinsic = sensor_to_base_footprint_;
         const auto points = PointCloud2ToEigen(msg, {});
-        const auto normalized_timestamps = NormalizeTimestamps(timestamps);
         const auto &[frame, kpoints] =
-            kinematic_icp_->RegisterFrame(points, normalized_timestamps, extrinsic, delta);
+            kinematic_icp_->RegisterFrame(points, timestamps, extrinsic, delta);
         PublishClouds(frame, kpoints);
     }
 
-    auto toTime = [](const builtin_interfaces::msg::Time &stamp) -> double {
-        return rclcpp::Time(stamp).nanoseconds() * 1e-9;
-    };
     // Compute velocities, use the elapsed time between the current msg and the last received
-    const double elapsed_time = toTime(current_stamp_) - toTime(last_stamp);
+    const double elapsed_time =
+        timestamps_handler_.toTime(end_odom_query) - timestamps_handler_.toTime(begin_odom_query);
     const Sophus::SE3d::Tangent delta_twist = (last_pose.inverse() * kinematic_icp_->pose()).log();
     const Sophus::SE3d::Tangent velocity = delta_twist / elapsed_time;
 
@@ -237,7 +225,7 @@ void LidarOdometryServer::PublishOdometryMsg(const Sophus::SE3d &pose,
             if (invert_odom_tf_) return tf2::sophusToTransform(pose.inverse());
             return tf2::sophusToTransform(pose);
         }();
-        tf_msg_.header.stamp = current_stamp_;
+        tf_msg_.header.stamp = timestamps_handler_.last_processed_stamp_;
         tf_broadcaster_->sendTransform(tf_msg_);
     }
 
@@ -245,7 +233,7 @@ void LidarOdometryServer::PublishOdometryMsg(const Sophus::SE3d &pose,
     odom_msg_.pose.pose = tf2::sophusToPose(pose);
     odom_msg_.twist.twist.linear.x = velocity[0];
     odom_msg_.twist.twist.angular.z = velocity[5];
-    odom_msg_.header.stamp = current_stamp_;
+    odom_msg_.header.stamp = timestamps_handler_.last_processed_stamp_;
     odom_publisher_->publish(odom_msg_);
 }
 
@@ -254,12 +242,12 @@ void LidarOdometryServer::PublishClouds(const std::vector<Eigen::Vector3d> frame
     // For re-publishing the input frame and keypoints, we do it in the LiDAR coordinate frames
     std_msgs::msg::Header lidar_header;
     lidar_header.frame_id = base_frame_;
-    lidar_header.stamp = current_stamp_;
+    lidar_header.stamp = timestamps_handler_.last_processed_stamp_;
 
     // The internal map representation is in the lidar_odom_frame_
     std_msgs::msg::Header map_header;
     map_header.frame_id = lidar_odom_frame_;
-    map_header.stamp = current_stamp_;
+    map_header.stamp = timestamps_handler_.last_processed_stamp_;
 
     // Check for subscriptions before publishing to avoid unnecesary CPU usage
     if (frame_publisher_->get_subscription_count() > 0) {
