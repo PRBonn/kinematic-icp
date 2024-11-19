@@ -116,14 +116,9 @@ std::tuple<StampType, StampType, std::vector<double>> TimeStampHandler::ProcessT
         const double &min_stamp_in_seconds = *min_it;
         const double msg_stamp_in_seconds = this->toTime(msg_stamp);
 
-        double deskewing_endpoint_stamp = min_stamp_in_seconds;
         const double scan_duration_in_seconds = max_stamp_in_seconds - min_stamp_in_seconds;
         // Check if stamping happens and the beginning or the end of scan
-        if (std::abs(msg_stamp_in_seconds - max_stamp_in_seconds) < 1e-8) {
-            // end-stamping -> we need to create the timestamps for deskewing considering that the
-            // latest stamp is the end-point of the deskewing
-            deskewing_endpoint_stamp = msg_stamp_in_seconds;
-        } else {
+        if (std::abs(msg_stamp_in_seconds - max_stamp_in_seconds) > 1e-8) {
             // begin-stamping -> add scan duration to the stamp
             const auto scan_duration = tf2::durationFromSec(scan_duration_in_seconds);
             end_stamp = StampType(rclcpp::Time(end_stamp) + scan_duration);
@@ -132,7 +127,7 @@ std::tuple<StampType, StampType, std::vector<double>> TimeStampHandler::ProcessT
         // Normalize timestamps
         std::transform(timestamps.cbegin(), timestamps.cend(), timestamps.begin(),
                        [&](const auto &timestamp) {
-                           return (timestamp - deskewing_endpoint_stamp) /
+                           return (timestamp - min_stamp_in_seconds) /
                                   (max_stamp_in_seconds - min_stamp_in_seconds);
                        });
     }
