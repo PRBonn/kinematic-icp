@@ -53,6 +53,8 @@ struct Config {
     int max_num_iterations = 10;
     double convergence_criterion = 0.001;
     int max_num_threads = 1;
+    bool use_adaptive_odometry_regularization = true;
+    double fixed_regularization = 0.0;  // <-- Ignored if use_adaptive_threshold = true
 
     // Motion compensation
     bool deskew = false;
@@ -64,8 +66,11 @@ public:
     using Vector3dVectorTuple = std::tuple<Vector3dVector, Vector3dVector>;
 
     explicit KinematicICP(const Config &config)
-        : registration_(
-              config.max_num_iterations, config.convergence_criterion, config.max_num_threads),
+        : registration_(config.max_num_iterations,
+                        config.convergence_criterion,
+                        config.max_num_threads,
+                        config.use_adaptive_odometry_regularization,
+                        config.fixed_regularization),
           correspondence_threshold_(config.map_resolution(),
                                     config.max_range,
                                     config.use_adaptive_threshold,
