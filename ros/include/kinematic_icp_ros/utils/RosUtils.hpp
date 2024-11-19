@@ -129,15 +129,6 @@ inline Sophus::SE3d LookupDeltaTransform(const std::string &target_frame,
     }
 }
 
-std::optional<PointField> GetTimestampField(const PointCloud2::ConstSharedPtr msg);
-
-std::vector<double> NormalizeTimestamps(const std::vector<double> &timestamps);
-
-auto ExtractTimestampsFromMsg(const PointCloud2::ConstSharedPtr msg,
-                              const PointField &timestamp_field);
-
-std::vector<double> GetTimestamps(const PointCloud2::ConstSharedPtr msg);
-
 std::vector<Eigen::Vector3d> PointCloud2ToEigen(const PointCloud2::ConstSharedPtr msg,
                                                 const Sophus::SE3d &T = {});
 

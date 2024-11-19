@@ -113,7 +113,7 @@ void OfflineNode::Run() {
     while (rclcpp::ok() && bag_multiplexer_.IsMessageAvailable()) {
         const auto msg = GetNextMsg();
         odometry_server_->RegisterFrame(msg);
-        const auto &stamp = odometry_server_->current_stamp_;
+        const auto &stamp = odometry_server_->timestamps_handler_.last_processed_stamp_;
         poses_with_timestamps_.emplace_back(stamp.sec + stamp.nanosec * 1e-9,
                                             odometry_server_->kinematic_icp_->pose());
         bar.tick();
