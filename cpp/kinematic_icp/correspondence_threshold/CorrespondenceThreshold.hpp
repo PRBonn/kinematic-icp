@@ -33,20 +33,12 @@ struct CorrespondenceThreshold {
                                      const bool use_adaptive_threshold,
                                      const double fixed_threshold);
 
-<<<<<<< HEAD
-    void UpdateModelError(const Sophus::SE3d &current_deviation);
-=======
     void UpdateOdometryError(const Sophus::SE3d &odometry_error);
->>>>>>> 59bc9fc (Kinematic ICP Threshold (#15))
 
     double ComputeThreshold() const;
 
     inline void Reset() {
-<<<<<<< HEAD
-        model_sse_ = 0.0;
-=======
         odom_sse_ = 0.0;
->>>>>>> 59bc9fc (Kinematic ICP Threshold (#15))
         num_samples_ = 1e-8;
     }
 
@@ -57,13 +49,8 @@ struct CorrespondenceThreshold {
     bool use_adaptive_threshold_;
     double fixed_threshold_;  // <-- Ignored if use_adaptive_threshold_ = true
 
-<<<<<<< HEAD
-    // Local cache for ccomputation
-    double model_sse_;
-=======
     // Local cache for computation
     double odom_sse_;
->>>>>>> 59bc9fc (Kinematic ICP Threshold (#15))
     double num_samples_;
 };
 }  // namespace kinematic_icp
