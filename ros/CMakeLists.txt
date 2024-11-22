@@ -36,6 +36,7 @@ find_package(rcutils REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 find_package(rosbag2_storage REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(laser_geometry REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -50,6 +51,7 @@ set(dependencies
     rosbag2_cpp
     rosbag2_storage
     sensor_msgs
+    laser_geometry
     std_msgs
     std_srvs
     tf2_ros

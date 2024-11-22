@@ -26,7 +26,9 @@
 #include <string>
 
 // ROS
+#include <laser_geometry/laser_geometry.hpp>
 #include <rclcpp/node.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include "kinematic_icp_ros/server/LidarOdometryServer.hpp"
@@ -43,12 +45,14 @@ public:
 
 private:
     // Common for offline/online nodes
-    std::string pcl_topic_;
+    std::string lidar_topic_;
     std::shared_ptr<LidarOdometryServer> odometry_server_;
     rclcpp::Node::SharedPtr node_;
+    laser_geometry::LaserProjection laser_projector_;
 
     // Online node specifics
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_sub_;
+    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_scan_sub_;
 };
 
 }  // namespace kinematic_icp_ros
