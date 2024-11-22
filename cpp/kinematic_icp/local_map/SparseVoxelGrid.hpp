@@ -29,32 +29,56 @@
 namespace kinematic_icp {
 // Following the Cult of Faconti
 struct VoxelBlock {
-    using IteratorType = std::array<Eigen::Vector3d, 20>::iterator;
-    using ConstIteratorType = std::array<Eigen::Vector3d, 20>::const_iterator;
+    static constexpr size_t MAX_SIZE = 20;
+    using PointsContainerType = std::array<Eigen::Vector3d, MAX_SIZE>;
+    using IteratorType = PointsContainerType::iterator;
+    using ConstIteratorType = PointsContainerType::const_iterator;
+
     VoxelBlock() = default;
+
     VoxelBlock(const VoxelBlock &other) = delete;
+    VoxelBlock &operator=(const VoxelBlock &) = delete;
+
     VoxelBlock(VoxelBlock &&other) = default;
+    VoxelBlock &operator=(VoxelBlock &&other) = default;
+
     void addPoint(const Eigen::Vector3d &p);
+
+    inline std::size_t size() const { return std::distance(cbegin(), cend()); }
 
     const Eigen::Vector3d &front() const { return points_.front(); }
     inline IteratorType begin() { return points_.begin(); }
     inline ConstIteratorType cbegin() const { return points_.cbegin(); }
 
-    inline IteratorType end() { return points_.end(); }
-    inline ConstIteratorType cend() const { return points_.cend(); }
+    inline IteratorType end() { return std::next(begin(), size_); }
+    inline ConstIteratorType cend() const { return std::next(cbegin(), size_); }
 
 private:
-    std::array<Eigen::Vector3d, 20> points_;
-    std::size_t size_ = 0;
+    std::array<Eigen::Vector3d, MAX_SIZE> points_;
+    uint16_t size_ = 0;
 };
+
 struct SparseVoxelGrid {
     explicit SparseVoxelGrid(const double voxel_size,
                              const double clipping_distance,
                              const unsigned int max_points_per_voxel);
 
+    inline void Clear() { map_.clear(Bonxai::ClearOption::CLEAR_MEMORY); }
+    inline bool Empty() { return map_.activeCellsCount() == 0; }
+    void Update(const std::vector<Eigen::Vector3d> &points, const Sophus::SE3d &pose);
+    void AddPoints(const std::vector<Eigen::Vector3d> &points);
+    void RemovePointsFarFromLocation(const Eigen::Vector3d &origin);
+    std::vector<Eigen::Vector3d> Pointcloud() const;
+    std::tuple<Eigen::Vector3d, double> GetClosestNeighbor(const Eigen::Vector3d &query) const;
+
     double voxel_size_;
-    double max_distance_;
+    double clipping_distance_;
     unsigned int max_points_per_voxel_;
     Bonxai::VoxelGrid<VoxelBlock> map_;
+
+private:
+    using AccessorType = typename Bonxai::VoxelGrid<VoxelBlock>::Accessor;
+    AccessorType accessor_;
 };
+
 }  // namespace kinematic_icp
