@@ -24,6 +24,7 @@
 
 #include <Eigen/Core>
 #include <cmath>
+#include <kiss_icp/core/Preprocessing.hpp>
 #include <sophus/se3.hpp>
 #include <tuple>
 #include <vector>
@@ -101,7 +102,17 @@ protected:
     KinematicRegistration registration_;
     CorrespondenceThreshold correspondence_threshold_;
     Config config_;
+<<<<<<< HEAD
     SparseVoxelGrid local_map_;
+=======
+<<<<<<< HEAD
+    // KISS-ICP pipeline modules
+    kiss_icp::Preprocessor preprocessor_;
+    kiss_icp::VoxelHashMap local_map_;
+=======
+    SparseVoxelGrid local_map_;
+>>>>>>> 01188b4 (At least replicate the functionalities of kiss map, need to test and)
+>>>>>>> 7630bc5 (At least replicate the functionalities of kiss map, need to test and)
 };
 
 }  // namespace kinematic_icp::pipeline
