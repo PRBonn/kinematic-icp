@@ -24,14 +24,12 @@
 
 #include <Eigen/Core>
 #include <cmath>
-#include <kiss_icp/core/Threshold.hpp>
-#include <kiss_icp/core/VoxelHashMap.hpp>
-#include <kiss_icp/pipeline/KissICP.hpp>
 #include <sophus/se3.hpp>
 #include <tuple>
 #include <vector>
 
 #include "kinematic_icp/correspondence_threshold/CorrespondenceThreshold.hpp"
+#include "kinematic_icp/local_map/SparseVoxelGrid.hpp"
 #include "kinematic_icp/registration/Registration.hpp"
 
 namespace kinematic_icp::pipeline {
@@ -91,8 +89,8 @@ public:
 
     std::vector<Eigen::Vector3d> LocalMap() const { return local_map_.Pointcloud(); };
 
-    const kiss_icp::VoxelHashMap &VoxelMap() const { return local_map_; };
-    kiss_icp::VoxelHashMap &VoxelMap() { return local_map_; };
+    const SparseVoxelGrid &VoxelMap() const { return local_map_; };
+    SparseVoxelGrid &VoxelMap() { return local_map_; };
 
     const Sophus::SE3d &pose() const { return last_pose_; }
     Sophus::SE3d &pose() { return last_pose_; }
@@ -103,8 +101,7 @@ protected:
     KinematicRegistration registration_;
     CorrespondenceThreshold correspondence_threshold_;
     Config config_;
-    // KISS-ICP pipeline modules
-    kiss_icp::VoxelHashMap local_map_;
+    SparseVoxelGrid local_map_;
 };
 
 }  // namespace kinematic_icp::pipeline

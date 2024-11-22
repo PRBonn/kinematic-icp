@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-//
+#pragma once
 #include <Eigen/Core>
 #include <array>
 #include <bonxai/bonxai.hpp>
@@ -64,7 +64,7 @@ struct SparseVoxelGrid {
                              const unsigned int max_points_per_voxel);
 
     inline void Clear() { map_.clear(Bonxai::ClearOption::CLEAR_MEMORY); }
-    inline bool Empty() { return map_.activeCellsCount() == 0; }
+    inline bool Empty() const { return map_.activeCellsCount() == 0; }
     void Update(const std::vector<Eigen::Vector3d> &points, const Sophus::SE3d &pose);
     void AddPoints(const std::vector<Eigen::Vector3d> &points);
     void RemovePointsFarFromLocation(const Eigen::Vector3d &origin);

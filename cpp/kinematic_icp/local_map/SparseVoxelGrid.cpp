@@ -27,6 +27,23 @@
 #include <bonxai/bonxai.hpp>
 #include <sophus/se3.hpp>
 
+#include "bonxai/grid_coord.hpp"
+
+namespace {
+static std::array<Bonxai::CoordT, 27> shifts{
+    Bonxai::CoordT{-1, -1, -1}, Bonxai::CoordT{-1, -1, 0}, Bonxai::CoordT{-1, -1, 1},
+    Bonxai::CoordT{-1, 0, -1},  Bonxai::CoordT{-1, 0, 0},  Bonxai::CoordT{-1, 0, 1},
+    Bonxai::CoordT{-1, 1, -1},  Bonxai::CoordT{-1, 1, 0},  Bonxai::CoordT{-1, 1, 1},
+
+    Bonxai::CoordT{0, -1, -1},  Bonxai::CoordT{0, -1, 0},  Bonxai::CoordT{0, -1, 1},
+    Bonxai::CoordT{0, 0, -1},   Bonxai::CoordT{0, 0, 0},   Bonxai::CoordT{0, 0, 1},
+    Bonxai::CoordT{0, 1, -1},   Bonxai::CoordT{0, 1, 0},   Bonxai::CoordT{0, 1, 1},
+
+    Bonxai::CoordT{1, -1, -1},  Bonxai::CoordT{1, -1, 0},  Bonxai::CoordT{1, -1, 1},
+    Bonxai::CoordT{1, 0, -1},   Bonxai::CoordT{1, 0, 0},   Bonxai::CoordT{1, 0, 1},
+    Bonxai::CoordT{1, 1, -1},   Bonxai::CoordT{1, 1, 0},   Bonxai::CoordT{1, 1, 1}};
+}
+
 namespace kinematic_icp {
 void VoxelBlock::addPoint(const Eigen::Vector3d &p) {
     points_[size_++] = p;
@@ -44,9 +61,33 @@ SparseVoxelGrid::SparseVoxelGrid(const double voxel_size,
       map_(voxel_size),
       accessor_(map_.createAccessor()) {}
 
+std::tuple<Eigen::Vector3d, double> SparseVoxelGrid::GetClosestNeighbor(
+    const Eigen::Vector3d &query) const {
+    Eigen::Vector3d closest_neighbor = Eigen::Vector3d::Zero();
+    double closest_distance = std::numeric_limits<double>::max();
+    const auto const_accessor = map_.createConstAccessor();
+    const Bonxai::CoordT query_voxel = map_.posToCoord(query);
+    std::for_each(shifts.cbegin(), shifts.cend(), [&](const Bonxai::CoordT &voxel_coordinates) {
+        const VoxelBlock *voxel_points = const_accessor.value(query_voxel + voxel_coordinates);
+        if (voxel_points != nullptr) {
+            const Eigen::Vector3d &neighbor =
+                *std::min_element(voxel_points->cbegin(), voxel_points->cend(),
+                                  [&](const auto &lhs, const auto &rhs) {
+                                      return (lhs - query).norm() < (rhs - query).norm();
+                                  });
+            double distance = (neighbor - query).norm();
+            if (distance < closest_distance) {
+                closest_neighbor = neighbor;
+                closest_distance = distance;
+            }
+        }
+    });
+    return std::make_tuple(closest_neighbor, closest_distance);
+}
+
 void SparseVoxelGrid::AddPoints(const std::vector<Eigen::Vector3d> &points) {
     const double map_resolution = std::sqrt(voxel_size_ * voxel_size_ / max_points_per_voxel_);
-    std::for_each(points.cbegin(), points.cend(), [this](const Eigen::Vector3d &p) {
+    std::for_each(points.cbegin(), points.cend(), [&](const Eigen::Vector3d &p) {
         const auto voxel_coordinates = map_.posToCoord(p.x(), p.y(), p.z());
         VoxelBlock *voxel_points = accessor_.value(voxel_coordinates, true);
         if (voxel_points->size() == max_points_per_voxel_ ||
@@ -60,12 +101,13 @@ void SparseVoxelGrid::AddPoints(const std::vector<Eigen::Vector3d> &points) {
 }
 
 void SparseVoxelGrid::RemovePointsFarFromLocation(const Eigen::Vector3d &origin) {
-    map_.forEachCell([&origin, this](VoxelBlock &block, const auto &coordinate) {
+    auto remove_voxel = [this, &origin](VoxelBlock &block, const Bonxai::CoordT &coordinate) {
         if ((block.front() - origin).norm() >= clipping_distance_) {
             accessor_.setCellOff(coordinate);
         }
-    });
-    map_.releaseUnusedMemory();
+    };
+    map_.forEachCell(remove_voxel);
+    // map_.releaseUnusedMemory();
 }
 
 void SparseVoxelGrid::Update(const std::vector<Eigen::Vector3d> &points, const Sophus::SE3d &pose) {
