@@ -63,7 +63,7 @@ Correspondences DataAssociation(const kinematic_icp::StampedPointCloud &points,
                                 const kiss_icp::VoxelHashMap &voxel_map,
                                 const Sophus::SE3d &T,
                                 const double max_correspondance_distance) {
-    using points_iterator = std::vector<Eigen::Vector3d>::const_iterator;
+    using points_iterator = kinematic_icp::StampedPointCloud::const_iterator;
     Correspondences associations;
     associations.reserve(points.size());
     associations = tbb::parallel_reduce(

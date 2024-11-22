@@ -60,11 +60,14 @@ KinematicICP::StampedPointCloudTuple KinematicICP::RegisterFrame(
     const auto model_deviation = (last_pose_ * relative_odometry).inverse() * new_pose;
 
     // Update step: threshold, local map and the last pose
-    correspondence_threshold_.UpdateModelError(model_deviation);
+    correspondence_threshold_.UpdateOdometryError(model_deviation);
     const auto estimated_relative_motion = last_pose_.inverse() * new_pose;
     const auto &deskewed_mapping_frame =
         config_.deskew ? DeSkew(mapping_frame, estimated_relative_motion) : mapping_frame;
-    local_map_.Update(deskewed_mapping_frame, new_pose);
+    std::vector<Eigen::Vector3d> map_points(deskewed_mapping_frame.size());
+    std::transform(deskewed_mapping_frame.cbegin(), deskewed_mapping_frame.cend(),
+                   map_points.begin(), [&](const auto &pt) { return new_pose * pt.coordinates; });
+    local_map_.AddPoints(map_points);
     last_pose_ = new_pose;
 
     // Return the (deskew) input raw scan (frame) and the points used for
