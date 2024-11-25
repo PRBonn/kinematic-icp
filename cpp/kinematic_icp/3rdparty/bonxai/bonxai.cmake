@@ -26,5 +26,7 @@ if(CMAKE_VERSION VERSION_GREATER 3.24)
 endif()
 
 include(FetchContent)
-FetchContent_Declare(bonxai URL https://github.com/facontidavide/Bonxai/archive/refs/tags/v0.6.0.tar.gz SOURCE_SUBDIR bonxai_core)
+FetchContent_Declare(
+  bonxai URL https://github.com/facontidavide/Bonxai/archive/refs/tags/v0.6.0.tar.gz SOURCE_SUBDIR bonxai_core
+  PATCH_COMMAND patch -p1 < ${CMAKE_CURRENT_LIST_DIR}/bonxai.patch UPDATE_DISCONNECTED 1)
 FetchContent_MakeAvailable(bonxai)
