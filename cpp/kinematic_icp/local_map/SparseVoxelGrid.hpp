@@ -27,36 +27,8 @@
 #include <sophus/se3.hpp>
 
 namespace kinematic_icp {
-// Following the Cult of Faconti
-struct VoxelBlock {
-    static constexpr size_t MAX_SIZE = 20;
-    using PointsContainerType = std::array<Eigen::Vector3d, MAX_SIZE>;
-    using IteratorType = PointsContainerType::iterator;
-    using ConstIteratorType = PointsContainerType::const_iterator;
 
-    VoxelBlock() = default;
-
-    VoxelBlock(const VoxelBlock &other) = delete;
-    VoxelBlock &operator=(const VoxelBlock &) = delete;
-
-    VoxelBlock(VoxelBlock &&other) = default;
-    VoxelBlock &operator=(VoxelBlock &&other) = default;
-
-    void addPoint(const Eigen::Vector3d &p);
-
-    inline std::size_t size() const { return std::distance(cbegin(), cend()); }
-
-    const Eigen::Vector3d &front() const { return points_.front(); }
-    inline IteratorType begin() { return points_.begin(); }
-    inline ConstIteratorType cbegin() const { return points_.cbegin(); }
-
-    inline IteratorType end() { return std::next(begin(), size_); }
-    inline ConstIteratorType cend() const { return std::next(cbegin(), size_); }
-
-private:
-    std::array<Eigen::Vector3d, MAX_SIZE> points_;
-    uint16_t size_ = 0;
-};
+using VoxelBlock = std::vector<Eigen::Vector3d>;
 
 struct SparseVoxelGrid {
     explicit SparseVoxelGrid(const double voxel_size,

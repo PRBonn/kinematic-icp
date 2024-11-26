@@ -45,12 +45,6 @@ static std::array<Bonxai::CoordT, 27> shifts{
 }
 
 namespace kinematic_icp {
-void VoxelBlock::addPoint(const Eigen::Vector3d &p) {
-    points_[size_++] = p;
-    if (size_ > VoxelBlock::MAX_SIZE) {
-        throw std::runtime_error("VoxelBlock| size is too big, want to fix somehow");
-    }
-}
 
 SparseVoxelGrid::SparseVoxelGrid(const double voxel_size,
                                  const double clipping_distance,
@@ -96,7 +90,8 @@ void SparseVoxelGrid::AddPoints(const std::vector<Eigen::Vector3d> &points) {
             })) {
             return;
         }
-        voxel_points->addPoint(p);
+        voxel_points->reserve(max_points_per_voxel_);
+        voxel_points->emplace_back(p);
     });
 }
 
@@ -107,7 +102,7 @@ void SparseVoxelGrid::RemovePointsFarFromLocation(const Eigen::Vector3d &origin)
         }
     };
     map_.forEachCell(remove_voxel);
-    // map_.releaseUnusedMemory();
+    map_.releaseUnusedMemory();
 }
 
 void SparseVoxelGrid::Update(const std::vector<Eigen::Vector3d> &points, const Sophus::SE3d &pose) {
