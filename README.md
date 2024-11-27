@@ -90,6 +90,14 @@ To specify a custom directory for the output file, use the `output_dir` paramete
 ros2 launch kinematic_icp offline_node.launch.py lidar_topic:=<TOPIC> bag_filename:=<ROSBAG> output_dir:=<OUTPUT_DIRECTORY>
 ```
 
+## 2D LiDAR support
+
+You can run both the `online_node` and the `offline_node` on a 2D Laser topic (with message type `LaserScan`) by setting the `use_2d_lidar` flag to `true`. For example:
+
+```sh
+ros2 launch kinematic_icp online_node.launch.py lidar_topic:=<LASER_2D_TOPIC> use_2d_lidar:=true
+```
+
 
 ## Citation
 
