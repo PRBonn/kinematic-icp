@@ -46,7 +46,6 @@ std::tuple<Eigen::Vector3d, double> SparseVoxelGrid::GetClosestNeighbor(
     Eigen::Vector3d closest_neighbor = Eigen::Vector3d::Zero();
     double closest_distance = std::numeric_limits<double>::max();
     const Bonxai::CoordT query_voxel = map_.posToCoord(query);
-    // const auto inner_grid_it = map_.rootMap().find(query_voxel);
     const auto *leaf_grid = const_accessor.getLeafGrid(query_voxel);
     if (leaf_grid != nullptr) {
         for (auto leaf_it = leaf_grid->mask().beginOn(); leaf_it; ++leaf_it) {
