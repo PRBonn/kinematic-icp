@@ -29,21 +29,6 @@
 
 #include "bonxai/grid_coord.hpp"
 
-namespace {
-static std::array<Bonxai::CoordT, 27> shifts{
-    Bonxai::CoordT{-1, -1, -1}, Bonxai::CoordT{-1, -1, 0}, Bonxai::CoordT{-1, -1, 1},
-    Bonxai::CoordT{-1, 0, -1},  Bonxai::CoordT{-1, 0, 0},  Bonxai::CoordT{-1, 0, 1},
-    Bonxai::CoordT{-1, 1, -1},  Bonxai::CoordT{-1, 1, 0},  Bonxai::CoordT{-1, 1, 1},
-
-    Bonxai::CoordT{0, -1, -1},  Bonxai::CoordT{0, -1, 0},  Bonxai::CoordT{0, -1, 1},
-    Bonxai::CoordT{0, 0, -1},   Bonxai::CoordT{0, 0, 0},   Bonxai::CoordT{0, 0, 1},
-    Bonxai::CoordT{0, 1, -1},   Bonxai::CoordT{0, 1, 0},   Bonxai::CoordT{0, 1, 1},
-
-    Bonxai::CoordT{1, -1, -1},  Bonxai::CoordT{1, -1, 0},  Bonxai::CoordT{1, -1, 1},
-    Bonxai::CoordT{1, 0, -1},   Bonxai::CoordT{1, 0, 0},   Bonxai::CoordT{1, 0, 1},
-    Bonxai::CoordT{1, 1, -1},   Bonxai::CoordT{1, 1, 0},   Bonxai::CoordT{1, 1, 1}};
-}
-
 namespace kinematic_icp {
 
 SparseVoxelGrid::SparseVoxelGrid(const double voxel_size,
@@ -57,25 +42,26 @@ SparseVoxelGrid::SparseVoxelGrid(const double voxel_size,
 
 std::tuple<Eigen::Vector3d, double> SparseVoxelGrid::GetClosestNeighbor(
     const Eigen::Vector3d &query) const {
+    const auto const_accessor = map_.createConstAccessor();
     Eigen::Vector3d closest_neighbor = Eigen::Vector3d::Zero();
     double closest_distance = std::numeric_limits<double>::max();
-    const auto const_accessor = map_.createConstAccessor();
     const Bonxai::CoordT query_voxel = map_.posToCoord(query);
-    std::for_each(shifts.cbegin(), shifts.cend(), [&](const Bonxai::CoordT &voxel_coordinates) {
-        const VoxelBlock *voxel_points = const_accessor.value(query_voxel + voxel_coordinates);
-        if (voxel_points != nullptr) {
-            const Eigen::Vector3d &neighbor =
-                *std::min_element(voxel_points->cbegin(), voxel_points->cend(),
-                                  [&](const auto &lhs, const auto &rhs) {
-                                      return (lhs - query).norm() < (rhs - query).norm();
-                                  });
+    // const auto inner_grid_it = map_.rootMap().find(query_voxel);
+    const auto *leaf_grid = const_accessor.getLeafGrid(query_voxel);
+    if (leaf_grid != nullptr) {
+        for (auto leaf_it = leaf_grid->mask().beginOn(); leaf_it; ++leaf_it) {
+            const VoxelBlock &block = leaf_grid->cell(*leaf_it);
+            const Eigen::Vector3d &neighbor = *std::min_element(
+                block.cbegin(), block.cend(), [&](const auto &lhs, const auto &rhs) {
+                    return (lhs - query).norm() < (rhs - query).norm();
+                });
             double distance = (neighbor - query).norm();
             if (distance < closest_distance) {
                 closest_neighbor = neighbor;
                 closest_distance = distance;
             }
         }
-    });
+    }
     return std::make_tuple(closest_neighbor, closest_distance);
 }
 
