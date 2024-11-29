@@ -43,7 +43,8 @@ def _generate_launch_description(context: launch.LaunchContext, *args, **kwargs)
             + "/config/kinematic_icp_ros.yaml",
             {
                 # Input topic, is not a remap to marry API with offline node
-                "input": LaunchConfiguration("lidar_topic"),
+                "lidar_topic": LaunchConfiguration("lidar_topic"),
+                "use_2d_lidar": LaunchConfiguration("use_2d_lidar"),
                 # ROS node configuration
                 "lidar_odom_frame": LaunchConfiguration("lidar_odom_frame"),
                 "wheel_odom_frame": LaunchConfiguration("wheel_odom_frame"),

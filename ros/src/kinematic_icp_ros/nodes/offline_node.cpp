@@ -29,8 +29,11 @@
 #include <vector>
 
 // ROS
+#include <laser_geometry/laser_geometry.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_options.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include "kinematic_icp_ros/nodes/offline_node.hpp"
 #include "kinematic_icp_ros/server/LidarOdometryServer.hpp"
@@ -51,15 +54,23 @@ namespace kinematic_icp_ros {
 
 OfflineNode::OfflineNode(const rclcpp::NodeOptions &options) {
     node_ = rclcpp::Node::make_shared("kinematic_icp_offline_node", options);
-    pcl_topic_ = node_->declare_parameter<std::string>("input");
+    lidar_topic_ = node_->declare_parameter<std::string>("lidar_topic");
+    use_2d_lidar_ = node_->declare_parameter<bool>("use_2d_lidar");
     odometry_server_ = std::make_shared<LidarOdometryServer>(node_);
+    if (use_2d_lidar_) {
+        RCLCPP_INFO_STREAM(node_->get_logger(),
+                           "Started in 2D scanner mode with topic: " << lidar_topic_);
+    } else {
+        RCLCPP_INFO_STREAM(node_->get_logger(),
+                           "Started in 3D Lidar mode with topic: " << lidar_topic_);
+    }
 
     auto bag_filename = node_->declare_parameter<std::string>("bag_filename");
     const auto poses_filename = generateOutputFilename(bag_filename);
     output_pose_file_ = std::filesystem::path(node_->declare_parameter<std::string>("output_dir"));
     output_pose_file_ /= poses_filename;
     auto tf_bridge = std::make_shared<BufferableBag::TFBridge>(node_);
-    bag_multiplexer_.AddBag(BufferableBag(bag_filename, tf_bridge, pcl_topic_));
+    bag_multiplexer_.AddBag(BufferableBag(bag_filename, tf_bridge, lidar_topic_));
 }
 
 void OfflineNode::writePosesInTumFormat() {
@@ -98,14 +109,30 @@ void OfflineNode::Run() {
                                 indicators::option::ShowRemainingTime{true},
                                 indicators::option::Stream{std::cout},
                                 indicators::option::MaxProgress{bag_multiplexer_.message_count()}};
+
+    auto lidar2d_to_3d = [this](const sensor_msgs::msg::LaserScan::SharedPtr &msg) {
+        auto projected_scan = std::make_shared<sensor_msgs::msg::PointCloud2>();
+        laser_projector_.projectLaser(*msg, *projected_scan, -1.0,
+                                      laser_geometry::channel_option::Timestamp);
+        return projected_scan;
+    };
     // Deserialize the next pointcloud message from the bagfiles
-    auto GetNextMsg = [this] {
-        const rclcpp::Serialization<sensor_msgs::msg::PointCloud2> pcl2_serializer;
-        const auto pc_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
-        const auto &msg = bag_multiplexer_.GetNextMessage();
-        rclcpp::SerializedMessage serialized_msg(*msg.serialized_data);
-        pcl2_serializer.deserialize_message(&serialized_msg, pc_msg.get());
-        return pc_msg;
+    auto GetNextMsg = [&] {
+        if (use_2d_lidar_) {
+            const rclcpp::Serialization<sensor_msgs::msg::LaserScan> serializer;
+            const auto lidar_msg = std::make_shared<sensor_msgs::msg::LaserScan>();
+            const auto &msg = bag_multiplexer_.GetNextMessage();
+            rclcpp::SerializedMessage serialized_msg(*msg.serialized_data);
+            serializer.deserialize_message(&serialized_msg, lidar_msg.get());
+            return lidar2d_to_3d(lidar_msg);
+        } else {
+            const rclcpp::Serialization<sensor_msgs::msg::PointCloud2> serializer;
+            const auto lidar_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
+            const auto &msg = bag_multiplexer_.GetNextMessage();
+            rclcpp::SerializedMessage serialized_msg(*msg.serialized_data);
+            serializer.deserialize_message(&serialized_msg, lidar_msg.get());
+            return lidar_msg;
+        }
     };
 
     // This is the main blocking loop that this simulates the subscription form the online node,
