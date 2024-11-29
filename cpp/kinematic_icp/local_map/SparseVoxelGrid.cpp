@@ -30,7 +30,7 @@
 #include "bonxai/grid_coord.hpp"
 
 namespace {
-static std::array<Bonxai::CoordT, 27> shifts{
+static constexpr std::array<Bonxai::CoordT, 27> shifts{
     Bonxai::CoordT{-1, -1, -1}, Bonxai::CoordT{-1, -1, 0}, Bonxai::CoordT{-1, -1, 1},
     Bonxai::CoordT{-1, 0, -1},  Bonxai::CoordT{-1, 0, 0},  Bonxai::CoordT{-1, 0, 1},
     Bonxai::CoordT{-1, 1, -1},  Bonxai::CoordT{-1, 1, 0},  Bonxai::CoordT{-1, 1, 1},
@@ -60,9 +60,10 @@ std::tuple<Eigen::Vector3d, double> SparseVoxelGrid::GetClosestNeighbor(
     Eigen::Vector3d closest_neighbor = Eigen::Vector3d::Zero();
     double closest_distance = std::numeric_limits<double>::max();
     const auto const_accessor = map_.createConstAccessor();
-    const Bonxai::CoordT query_voxel = map_.posToCoord(query);
-    std::for_each(shifts.cbegin(), shifts.cend(), [&](const Bonxai::CoordT &voxel_coordinates) {
-        const VoxelBlock *voxel_points = const_accessor.value(query_voxel + voxel_coordinates);
+    const Bonxai::CoordT voxel = map_.posToCoord(query);
+    std::for_each(shifts.cbegin(), shifts.cend(), [&](const Bonxai::CoordT &voxel_shift) {
+        const Bonxai::CoordT query_voxel = voxel + voxel_shift;
+        const VoxelBlock *voxel_points = const_accessor.value(query_voxel);
         if (voxel_points != nullptr) {
             const Eigen::Vector3d &neighbor =
                 *std::min_element(voxel_points->cbegin(), voxel_points->cend(),
