@@ -38,24 +38,15 @@ struct Voxel {
         return x == other.x && y == other.y && z == other.z;
     }
 
-    inline bool operator!=(const Voxel &other) const { return !(*this == other); }
-
-    inline Voxel &operator+=(const Voxel &other) {
-        this->x += other.x;
-        this->y += other.y;
-        this->z += other.z;
-        return *this;
-    }
-    friend Voxel operator+(Voxel lhs, const Voxel &rhs) {
-        lhs += rhs;
-        return lhs;
+    inline Voxel operator+(const Voxel &other) const {
+        return {x + other.x, y + other.y, z + other.z};
     }
 };
 
 inline Voxel PointToVoxel(const Eigen::Vector3d &point, const double voxel_size) {
-    return {static_cast<int>(std::floor(point.x() / voxel_size)),
-            static_cast<int>(std::floor(point.y() / voxel_size)),
-            static_cast<int>(std::floor(point.z() / voxel_size))};
+    return {static_cast<int32_t>(std::floor(point.x() / voxel_size)),
+            static_cast<int32_t>(std::floor(point.y() / voxel_size)),
+            static_cast<int32_t>(std::floor(point.z() / voxel_size))};
 }
 
 /// Voxelize a point cloud keeping the original coordinates
