@@ -30,12 +30,13 @@
 
 #include <algorithm>
 #include <cmath>
-#include <kiss_icp/core/VoxelHashMap.hpp>
 #include <limits>
 #include <numeric>
 #include <sophus/se3.hpp>
 #include <sophus/so3.hpp>
 #include <tuple>
+
+#include "kinematic_icp/local_map/VoxelHashMap.hpp"
 
 using LinearSystem = std::pair<Eigen::Matrix2d, Eigen::Vector2d>;
 using Correspondences = std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>;
@@ -58,7 +59,7 @@ double ComputeOdometryRegularization(const Correspondences &associations,
 }
 
 Correspondences DataAssociation(const std::vector<Eigen::Vector3d> &points,
-                                const kiss_icp::VoxelHashMap &voxel_map,
+                                const kinematic_icp::VoxelHashMap &voxel_map,
                                 const Sophus::SE3d &T,
                                 const double max_correspondance_distance) {
     using points_iterator = std::vector<Eigen::Vector3d>::const_iterator;
@@ -160,7 +161,7 @@ KinematicRegistration::KinematicRegistration(const int max_num_iteration,
 }
 
 Sophus::SE3d KinematicRegistration::ComputeRobotMotion(const std::vector<Eigen::Vector3d> &frame,
-                                                       const kiss_icp::VoxelHashMap &voxel_map,
+                                                       const VoxelHashMap &voxel_map,
                                                        const Sophus::SE3d &last_robot_pose,
                                                        const Sophus::SE3d &relative_wheel_odometry,
                                                        const double max_correspondence_distance) {

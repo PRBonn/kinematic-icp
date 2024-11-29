@@ -24,6 +24,7 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <array>
 #include <sophus/se3.hpp>
 #include <vector>
 
@@ -32,17 +33,15 @@
 namespace {
 using kinematic_icp::Voxel;
 
-std::vector<Voxel> GetAdjacentVoxels(const Voxel &voxel, int adjacent_voxels = 1) {
-    std::vector<Voxel> voxel_neighborhood;
-    for (int i = voxel.x() - adjacent_voxels; i < voxel.x() + adjacent_voxels + 1; ++i) {
-        for (int j = voxel.y() - adjacent_voxels; j < voxel.y() + adjacent_voxels + 1; ++j) {
-            for (int k = voxel.z() - adjacent_voxels; k < voxel.z() + adjacent_voxels + 1; ++k) {
-                voxel_neighborhood.emplace_back(i, j, k);
-            }
-        }
-    }
-    return voxel_neighborhood;
-}
+static constexpr std::array<Voxel, 27> shifts{
+    Voxel{-1, -1, -1}, Voxel{-1, -1, 0}, Voxel{-1, -1, 1}, Voxel{-1, 0, -1}, Voxel{-1, 0, 0},
+    Voxel{-1, 0, 1},   Voxel{-1, 1, -1}, Voxel{-1, 1, 0},  Voxel{-1, 1, 1},
+
+    Voxel{0, -1, -1},  Voxel{0, -1, 0},  Voxel{0, -1, 1},  Voxel{0, 0, -1},  Voxel{0, 0, 0},
+    Voxel{0, 0, 1},    Voxel{0, 1, -1},  Voxel{0, 1, 0},   Voxel{0, 1, 1},
+
+    Voxel{1, -1, -1},  Voxel{1, -1, 0},  Voxel{1, -1, 1},  Voxel{1, 0, -1},  Voxel{1, 0, 0},
+    Voxel{1, 0, 1},    Voxel{1, 1, -1},  Voxel{1, 1, 0},   Voxel{1, 1, 1}};
 }  // namespace
 
 namespace kinematic_icp {
@@ -50,14 +49,13 @@ namespace kinematic_icp {
 std::tuple<Eigen::Vector3d, double> VoxelHashMap::GetClosestNeighbor(
     const Eigen::Vector3d &query) const {
     // Convert the point to voxel coordinates
-    const auto &voxel = PointToVoxel(query, voxel_size_);
-    // Get nearby voxels on the map
-    const auto &query_voxels = GetAdjacentVoxels(voxel);
+    const auto &query_voxel = PointToVoxel(query, voxel_size_);
     // Find the nearest neighbor
     Eigen::Vector3d closest_neighbor = Eigen::Vector3d::Zero();
     double closest_distance = std::numeric_limits<double>::max();
-    std::for_each(query_voxels.cbegin(), query_voxels.cend(), [&](const auto &query_voxel) {
-        auto search = map_.find(query_voxel);
+    std::for_each(shifts.cbegin(), shifts.cend(), [&](const auto &voxel_shift) {
+        const Voxel search_voxel = query_voxel + voxel_shift;
+        auto search = map_.find(search_voxel);
         if (search != map_.end()) {
             const auto &points = search.value();
             const Eigen::Vector3d &neighbor = *std::min_element(

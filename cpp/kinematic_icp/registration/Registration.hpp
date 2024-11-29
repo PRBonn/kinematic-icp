@@ -23,9 +23,10 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <kiss_icp/core/VoxelHashMap.hpp>
 #include <sophus/se3.hpp>
 #include <vector>
+
+#include "kinematic_icp/local_map/VoxelHashMap.hpp"
 
 namespace kinematic_icp {
 
@@ -37,7 +38,7 @@ struct KinematicRegistration {
                                    const double fixed_regularization);
 
     Sophus::SE3d ComputeRobotMotion(const std::vector<Eigen::Vector3d> &frame,
-                                    const kiss_icp::VoxelHashMap &voxel_map,
+                                    const VoxelHashMap &voxel_map,
                                     const Sophus::SE3d &last_robot_pose,
                                     const Sophus::SE3d &relative_wheel_odometry,
                                     const double max_correspondence_distance);

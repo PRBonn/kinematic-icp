@@ -37,9 +37,9 @@ auto transform_points(const std::vector<Eigen::Vector3d> &points, const Sophus::
 
 auto Voxelize(const std::vector<Eigen::Vector3d> &frame, const double voxel_size) {
     const std::vector<Eigen::Vector3d> &frame_downsample =
-        kiss_icp::VoxelDownsample(frame, voxel_size * 0.5);
+        kinematic_icp::VoxelDownsample(frame, voxel_size * 0.5);
     const std::vector<Eigen::Vector3d> &source =
-        kiss_icp::VoxelDownsample(frame_downsample, voxel_size * 1.5);
+        kinematic_icp::VoxelDownsample(frame_downsample, voxel_size * 1.5);
     return std::make_tuple(source, frame_downsample);
 }
 }  // namespace

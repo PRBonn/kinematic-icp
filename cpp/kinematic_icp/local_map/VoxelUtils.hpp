@@ -29,11 +29,33 @@
 
 namespace kinematic_icp {
 
-using Voxel = Eigen::Vector3i;
+struct Voxel {
+    int32_t x;
+    int32_t y;
+    int32_t z;
+
+    inline bool operator==(const Voxel &other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
+
+    inline bool operator!=(const Voxel &other) const { return !(*this == other); }
+
+    inline Voxel &operator+=(const Voxel &other) {
+        this->x += other.x;
+        this->y += other.y;
+        this->z += other.z;
+        return *this;
+    }
+    friend Voxel operator+(Voxel lhs, const Voxel &rhs) {
+        lhs += rhs;
+        return lhs;
+    }
+};
+
 inline Voxel PointToVoxel(const Eigen::Vector3d &point, const double voxel_size) {
-    return Voxel(static_cast<int>(std::floor(point.x() / voxel_size)),
-                 static_cast<int>(std::floor(point.y() / voxel_size)),
-                 static_cast<int>(std::floor(point.z() / voxel_size)));
+    return {static_cast<int>(std::floor(point.x() / voxel_size)),
+            static_cast<int>(std::floor(point.y() / voxel_size)),
+            static_cast<int>(std::floor(point.z() / voxel_size))};
 }
 
 /// Voxelize a point cloud keeping the original coordinates
@@ -45,7 +67,8 @@ std::vector<Eigen::Vector3d> VoxelDownsample(const std::vector<Eigen::Vector3d> 
 template <>
 struct std::hash<kinematic_icp::Voxel> {
     std::size_t operator()(const kinematic_icp::Voxel &voxel) const {
-        const uint32_t *vec = reinterpret_cast<const uint32_t *>(voxel.data());
-        return (vec[0] * 73856093 ^ vec[1] * 19349669 ^ vec[2] * 83492791);
+        return (static_cast<uint32_t>(voxel.x) * 73856093 ^
+                static_cast<uint32_t>(voxel.y) * 19349669 ^
+                static_cast<uint32_t>(voxel.z) * 83492791);
     }
 };
