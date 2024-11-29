@@ -27,6 +27,7 @@
 
 // ROS
 #include <filesystem>
+#include <laser_geometry/laser_geometry.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_options.hpp>
 #include <sophus/se3.hpp>
@@ -46,13 +47,15 @@ public:
 
 private:
     // Common for offline/online nodes
-    std::string pcl_topic_;
+    std::string lidar_topic_;
+    bool use_2d_lidar_;
     std::shared_ptr<LidarOdometryServer> odometry_server_;
     rclcpp::Node::SharedPtr node_;
     // store data for the experiments
     using PoseWithStamp = std::pair<double, Sophus::SE3d>;
     std::vector<PoseWithStamp> poses_with_timestamps_;
     std::filesystem::path output_pose_file_;
+    laser_geometry::LaserProjection laser_projector_;
 
     // Offline node specifics
     BagMultiplexer bag_multiplexer_;

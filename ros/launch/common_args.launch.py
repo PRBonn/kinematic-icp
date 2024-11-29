@@ -10,6 +10,12 @@ def generate_launch_description():
                 description="",
             ),
             DeclareLaunchArgument(
+                "use_2d_lidar",
+                default_value="false",
+                description="",
+                choices=["true", "false"],
+            ),
+            DeclareLaunchArgument(
                 "lidar_odometry_topic",
                 default_value="lidar_odometry",
                 description="",

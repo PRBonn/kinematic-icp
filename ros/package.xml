@@ -38,6 +38,7 @@ SOFTWARE.
   <depend>rclcpp_components</depend>
   <depend>rcutils</depend>
   <depend>sensor_msgs</depend>
+  <depend>laser_geometry</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>tf2_ros</depend>

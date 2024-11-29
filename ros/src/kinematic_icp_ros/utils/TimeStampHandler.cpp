@@ -42,13 +42,14 @@ using Header = std_msgs::msg::Header;
 std::optional<PointField> GetTimestampField(const PointCloud2::ConstSharedPtr msg) {
     PointField timestamp_field;
     for (const auto &field : msg->fields) {
-        if ((field.name == "t" || field.name == "timestamp" || field.name == "time")) {
+        if ((field.name == "t" || field.name == "timestamp" || field.name == "time" ||
+             field.name == "stamps")) {
             timestamp_field = field;
         }
     }
     if (timestamp_field.count) return timestamp_field;
     RCLCPP_WARN_ONCE(rclcpp::get_logger("kinematic_icp_ros"),
-                     "Field 't', 'timestamp', or 'time'  does not exist. "
+                     "Field 't', 'timestamp', 'time', or 'stamps'  does not exist. "
                      "Disabling scan deskewing");
     return {};
 }
