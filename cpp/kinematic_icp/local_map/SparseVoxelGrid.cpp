@@ -83,8 +83,8 @@ std::tuple<Eigen::Vector3d, double> SparseVoxelGrid::GetClosestNeighbor(
 void SparseVoxelGrid::AddPoints(const std::vector<Eigen::Vector3d> &points) {
     const double map_resolution = std::sqrt(voxel_size_ * voxel_size_ / max_points_per_voxel_);
     std::for_each(points.cbegin(), points.cend(), [&](const Eigen::Vector3d &p) {
-        const auto voxel_coordinates = map_.posToCoord(p.x(), p.y(), p.z());
-        VoxelBlock *voxel_points = accessor_.value(voxel_coordinates, true);
+        const auto voxel_coordinates = map_.posToCoord(p);
+        VoxelBlock *voxel_points = accessor_.value(voxel_coordinates, /*create_if_missing=*/true);
         if (voxel_points->size() == max_points_per_voxel_ ||
             std::any_of(voxel_points->cbegin(), voxel_points->cend(), [&](const auto &voxel_point) {
                 return (voxel_point - p).norm() < map_resolution;
