@@ -41,7 +41,6 @@ static void Update_BonxaiGrid(benchmark::State &state) {
     kinematic_icp::pipeline::Config default_config;
     kinematic_icp::SparseVoxelGrid grid(default_config.voxel_size, default_config.max_range,
                                         default_config.max_points_per_voxel);
-    grid.AddPoints(world.world_points);
     const auto trajectory = world.generateCircularTrajectory();
     std::vector<std::vector<Eigen::Vector3d>> scans;
     std::transform(trajectory.cbegin(), trajectory.cend(), scans.begin(),
@@ -60,7 +59,6 @@ static void Update_VoxelHashMap(benchmark::State &state) {
     kinematic_icp::pipeline::Config default_config;
     kiss_icp::VoxelHashMap grid(default_config.voxel_size, default_config.max_range,
                                 default_config.max_points_per_voxel);
-    grid.AddPoints(world.world_points);
     const auto trajectory = world.generateCircularTrajectory();
     std::vector<std::vector<Eigen::Vector3d>> scans(trajectory.size());
     std::transform(trajectory.cbegin(), trajectory.cend(), scans.begin(),
