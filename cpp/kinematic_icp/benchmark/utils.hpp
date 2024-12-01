@@ -8,7 +8,7 @@ struct World {
     static constexpr double CubeSizeInMeters = 100;
     static constexpr int ScanHorizontalResolution = 1024;
     static constexpr int ScanVerticalResolution = 32;
-    static constexpr int NumPositionsTrajectory = 1000;
+    static constexpr int NumPositionsTrajectory = 100;
     World() {
         world_points.reserve(6 * NumSamplesPerFace);
         samplePointsOnCubeFace({1, 0, 0}, CubeSizeInMeters);    // +X face
