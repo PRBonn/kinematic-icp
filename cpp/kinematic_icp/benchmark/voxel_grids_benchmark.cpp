@@ -62,7 +62,7 @@ static void Update_VoxelHashMap(benchmark::State &state) {
                                 default_config.max_points_per_voxel);
     grid.AddPoints(world.world_points);
     const auto trajectory = world.generateCircularTrajectory();
-    std::vector<std::vector<Eigen::Vector3d>> scans;
+    std::vector<std::vector<Eigen::Vector3d>> scans(trajectory.size());
     std::transform(trajectory.cbegin(), trajectory.cend(), scans.begin(),
                    [&](const auto &position) { return world.Generate3DScan(position); });
     for (auto _ : state) {

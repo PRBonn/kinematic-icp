@@ -4,10 +4,10 @@
 #include <random>
 
 struct World {
-    static constexpr size_t NumSamplesPerFace = 10000;
+    static constexpr size_t NumSamplesPerFace = 100000;
     static constexpr double CubeSizeInMeters = 100;
     static constexpr int ScanHorizontalResolution = 1024;
-    static constexpr int ScanVerticalResolution = 128;
+    static constexpr int ScanVerticalResolution = 32;
     static constexpr int NumPositionsTrajectory = 1000;
     World() {
         world_points.reserve(6 * NumSamplesPerFace);
