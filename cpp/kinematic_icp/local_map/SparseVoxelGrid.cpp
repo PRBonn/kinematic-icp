@@ -100,10 +100,10 @@ void SparseVoxelGrid::RemovePointsFarFromLocation(const Eigen::Vector3d &origin)
     auto remove_voxel = [this, &origin](VoxelBlock &block, const Bonxai::CoordT &coordinate) {
         if ((block.front() - origin).norm() >= clipping_distance_) {
             accessor_.setCellOff(coordinate);
+            block = VoxelBlock();
         }
     };
     map_.forEachCell(remove_voxel);
-    map_.releaseUnusedMemory();
 }
 
 void SparseVoxelGrid::Update(const std::vector<Eigen::Vector3d> &points, const Sophus::SE3d &pose) {
