@@ -36,24 +36,47 @@ static void GetClosestNeighbor_VoxelHashMap(benchmark::State &state) {
     }
 }
 
-// static void RegisterFrame_BonxaiGrid(benchmark::State &state) {
-//     World world;
-//     kinematic_icp::pipeline::Config default_config;
-//     kinematic_icp::SparseVoxelGrid grid(default_config.voxel_size, default_config.max_range,
-//                                         default_config.max_points_per_voxel);
-//     grid.AddPoints(world.world_points);
-//     kinematic_icp::KinematicRegistration registration(10, -1, 1, true, 1.0);
-//     const auto trajectory = world.generateCircularTrajectory();
-//     std::vector<std::vector<Eigen::Vector3d>> scans;
-//     std::transform()
-//     for (auto _ : state) {
-//         for (const auto &p : scan) {
-//             const auto &[dist, nn] = grid.GetClosestNeighbor(p);
-//         }
-//     }
-// }
+static void Update_BonxaiGrid(benchmark::State &state) {
+    World world;
+    kinematic_icp::pipeline::Config default_config;
+    kinematic_icp::SparseVoxelGrid grid(default_config.voxel_size, default_config.max_range,
+                                        default_config.max_points_per_voxel);
+    grid.AddPoints(world.world_points);
+    const auto trajectory = world.generateCircularTrajectory();
+    std::vector<std::vector<Eigen::Vector3d>> scans;
+    std::transform(trajectory.cbegin(), trajectory.cend(), scans.begin(),
+                   [&](const auto &position) { return world.Generate3DScan(position); });
+    for (auto _ : state) {
+        for (size_t i = 0; i < scans.size(); ++i) {
+            Sophus::SE3d pose;
+            pose.translation() = trajectory.at(i);
+            grid.Update(scans.at(i), pose);
+        }
+    }
+}
+
+static void Update_VoxelHashMap(benchmark::State &state) {
+    World world;
+    kinematic_icp::pipeline::Config default_config;
+    kiss_icp::VoxelHashMap grid(default_config.voxel_size, default_config.max_range,
+                                default_config.max_points_per_voxel);
+    grid.AddPoints(world.world_points);
+    const auto trajectory = world.generateCircularTrajectory();
+    std::vector<std::vector<Eigen::Vector3d>> scans;
+    std::transform(trajectory.cbegin(), trajectory.cend(), scans.begin(),
+                   [&](const auto &position) { return world.Generate3DScan(position); });
+    for (auto _ : state) {
+        for (size_t i = 0; i < scans.size(); ++i) {
+            Sophus::SE3d pose;
+            pose.translation() = trajectory.at(i);
+            grid.Update(scans.at(i), pose);
+        }
+    }
+}
 
 BENCHMARK(GetClosestNeighbor_BonxaiGrid);
 BENCHMARK(GetClosestNeighbor_VoxelHashMap);
+BENCHMARK(Update_BonxaiGrid);
+BENCHMARK(Update_VoxelHashMap);
 // Run the benchmark
 BENCHMARK_MAIN();
