@@ -41,10 +41,12 @@ static void AddPoints_BonxaiGrid(benchmark::State &state) {
     kinematic_icp::pipeline::Config default_config;
     const auto trajectory = world.generateCircularTrajectory();
     const auto scan = world.Generate3DScan();
-    kinematic_icp::SparseVoxelGrid grid(default_config.voxel_size, default_config.max_range,
-                                        default_config.max_points_per_voxel);
     for (auto _ : state) {
-        grid.AddPoints(scan);
+        kinematic_icp::SparseVoxelGrid grid(default_config.voxel_size, default_config.max_range,
+                                            default_config.max_points_per_voxel);
+        for (int i = 0; i < trajectory.size(); ++i) {
+            grid.AddPoints(scan);
+        }
     }
 }
 
@@ -53,10 +55,12 @@ static void AddPoints_VoxelHashMap(benchmark::State &state) {
     kinematic_icp::pipeline::Config default_config;
     const auto trajectory = world.generateCircularTrajectory();
     const auto scan = world.Generate3DScan();
-    kiss_icp::VoxelHashMap grid(default_config.voxel_size, default_config.max_range,
-                                default_config.max_points_per_voxel);
     for (auto _ : state) {
-        grid.AddPoints(scan);
+        kiss_icp::VoxelHashMap grid(default_config.voxel_size, default_config.max_range,
+                                    default_config.max_points_per_voxel);
+        for (int i = 0; i < trajectory.size(); ++i) {
+            grid.AddPoints(scan);
+        }
     }
 }
 
@@ -95,8 +99,8 @@ static void Update_VoxelHashMap(benchmark::State &state) {
 BENCHMARK(GetClosestNeighbor_BonxaiGrid);
 BENCHMARK(GetClosestNeighbor_VoxelHashMap);
 BENCHMARK(AddPoints_BonxaiGrid);
-BENCHMARK(AddPoints_BonxaiGrid);
-BENCHMARK(Update_VoxelHashMap);
+BENCHMARK(AddPoints_VoxelHashMap);
+BENCHMARK(Update_BonxaiGrid);
 BENCHMARK(Update_VoxelHashMap);
 // Run the benchmark
 BENCHMARK_MAIN();
