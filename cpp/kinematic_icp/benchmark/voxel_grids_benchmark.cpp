@@ -5,7 +5,6 @@
 #include <kiss_icp/core/VoxelHashMap.hpp>
 #include <sophus/se3.hpp>
 
-#include "kinematic_icp/registration/Registration.hpp"
 #include "utils.hpp"
 
 static void GetClosestNeighbor_BonxaiGrid(benchmark::State &state) {
@@ -15,8 +14,9 @@ static void GetClosestNeighbor_BonxaiGrid(benchmark::State &state) {
                                         default_config.max_points_per_voxel);
     grid.AddPoints(world.world_points);
     const auto scan = world.Generate3DScan();
+    const auto &[source, _] = VoxelDownsample(scan, default_config.voxel_size);
     for (auto _ : state) {
-        for (const auto &p : scan) {
+        for (const auto &p : source) {
             const auto &[dist, nn] = grid.GetClosestNeighbor(p);
         }
     }
@@ -29,8 +29,9 @@ static void GetClosestNeighbor_VoxelHashMap(benchmark::State &state) {
                                 default_config.max_points_per_voxel);
     grid.AddPoints(world.world_points);
     const auto scan = world.Generate3DScan();
+    const auto &[source, _] = VoxelDownsample(scan, default_config.voxel_size);
     for (auto _ : state) {
-        for (const auto &p : scan) {
+        for (const auto &p : source) {
             const auto &[dist, nn] = grid.GetClosestNeighbor(p);
         }
     }
@@ -39,28 +40,20 @@ static void GetClosestNeighbor_VoxelHashMap(benchmark::State &state) {
 static void AddPoints_BonxaiGrid(benchmark::State &state) {
     World world;
     kinematic_icp::pipeline::Config default_config;
-    const auto trajectory = world.generateCircularTrajectory();
-    const auto scan = world.Generate3DScan();
     for (auto _ : state) {
         kinematic_icp::SparseVoxelGrid grid(default_config.voxel_size, default_config.max_range,
                                             default_config.max_points_per_voxel);
-        for (int i = 0; i < trajectory.size(); ++i) {
-            grid.AddPoints(scan);
-        }
+        grid.AddPoints(world.world_points);
     }
 }
 
 static void AddPoints_VoxelHashMap(benchmark::State &state) {
     World world;
     kinematic_icp::pipeline::Config default_config;
-    const auto trajectory = world.generateCircularTrajectory();
-    const auto scan = world.Generate3DScan();
     for (auto _ : state) {
         kiss_icp::VoxelHashMap grid(default_config.voxel_size, default_config.max_range,
                                     default_config.max_points_per_voxel);
-        for (int i = 0; i < trajectory.size(); ++i) {
-            grid.AddPoints(scan);
-        }
+        grid.AddPoints(world.world_points);
     }
 }
 
@@ -69,13 +62,15 @@ static void Update_BonxaiGrid(benchmark::State &state) {
     kinematic_icp::pipeline::Config default_config;
     const auto trajectory = world.generateCircularTrajectory();
     const auto scan = world.Generate3DScan();
+    const auto &[_, frame_downsample] = VoxelDownsample(scan, default_config.voxel_size);
+    kinematic_icp::SparseVoxelGrid grid(default_config.voxel_size, default_config.max_range,
+                                        default_config.max_points_per_voxel);
+    grid.AddPoints(world.world_points);
     for (auto _ : state) {
-        kinematic_icp::SparseVoxelGrid grid(default_config.voxel_size, default_config.max_range,
-                                            default_config.max_points_per_voxel);
         for (size_t i = 0; i < trajectory.size(); ++i) {
             Sophus::SE3d pose;
             pose.translation() = trajectory.at(i);
-            grid.Update(scan, pose);
+            grid.Update(frame_downsample, pose);
         }
     }
 }
@@ -85,13 +80,15 @@ static void Update_VoxelHashMap(benchmark::State &state) {
     kinematic_icp::pipeline::Config default_config;
     const auto trajectory = world.generateCircularTrajectory();
     const auto scan = world.Generate3DScan();
+    const auto &[_, frame_downsample] = VoxelDownsample(scan, default_config.voxel_size);
+    kiss_icp::VoxelHashMap grid(default_config.voxel_size, default_config.max_range,
+                                default_config.max_points_per_voxel);
+    grid.AddPoints(world.world_points);
     for (auto _ : state) {
-        kiss_icp::VoxelHashMap grid(default_config.voxel_size, default_config.max_range,
-                                    default_config.max_points_per_voxel);
         for (size_t i = 0; i < trajectory.size(); ++i) {
             Sophus::SE3d pose;
             pose.translation() = trajectory.at(i);
-            grid.Update(scan, pose);
+            grid.Update(frame_downsample, pose);
         }
     }
 }

@@ -1,13 +1,22 @@
 #pragma once
 #include <Eigen/Dense>
 #include <iostream>
+#include <kiss_icp/core/VoxelUtils.hpp>
 #include <random>
 
+auto VoxelDownsample(const std::vector<Eigen::Vector3d> &frame, const double voxel_size) {
+    const std::vector<Eigen::Vector3d> &frame_downsample =
+        kiss_icp::VoxelDownsample(frame, voxel_size * 0.5);
+    const std::vector<Eigen::Vector3d> &source =
+        kiss_icp::VoxelDownsample(frame_downsample, voxel_size * 1.5);
+    return std::make_tuple(source, frame_downsample);
+}
+
 struct World {
-    static constexpr size_t NumSamplesPerFace = 100000;
+    static constexpr size_t NumSamplesPerFace = 10000;
     static constexpr double CubeSizeInMeters = 100;
     static constexpr int ScanHorizontalResolution = 1024;
-    static constexpr int ScanVerticalResolution = 32;
+    static constexpr int ScanVerticalResolution = 16;
     static constexpr int NumPositionsTrajectory = 100;
     World() {
         world_points.reserve(6 * NumSamplesPerFace);
