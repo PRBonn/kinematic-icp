@@ -24,6 +24,7 @@
 #include "SparseVoxelGrid.hpp"
 
 #include <Eigen/Core>
+#include <array>
 #include <bonxai/bonxai.hpp>
 #include <sophus/se3.hpp>
 
@@ -97,13 +98,29 @@ void SparseVoxelGrid::AddPoints(const std::vector<Eigen::Vector3d> &points) {
 }
 
 void SparseVoxelGrid::RemovePointsFarFromLocation(const Eigen::Vector3d &origin) {
-    auto remove_voxel = [this, &origin](VoxelBlock &block, const Bonxai::CoordT &coordinate) {
-        if ((block.front() - origin).norm() >= clipping_distance_) {
-            accessor_.setCellOff(coordinate);
-            block = VoxelBlock();
-        }
+    auto is_too_far_away = [&](const VoxelBlock &block) {
+        return (block.front() - origin).norm() > clipping_distance_;
     };
-    map_.forEachCell(remove_voxel);
+
+    std::vector<Bonxai::CoordT> keys_to_delete;
+    auto &root_map = map_.rootMap();
+    for (auto &[key, inner_grid] : root_map) {
+        for (auto inner_it = inner_grid.mask().beginOn(); inner_it; ++inner_it) {
+            const int32_t inner_index = *inner_it;
+            auto &leaf_grid = inner_grid.cell(inner_index);
+            const auto &voxel_block = leaf_grid->cell(leaf_grid->mask().findFirstOn());
+            if (is_too_far_away(voxel_block)) {
+                inner_grid.mask().setOff(inner_index);
+                leaf_grid.reset();
+            }
+        }
+        if (inner_grid.mask().isOff()) {
+            keys_to_delete.push_back(key);
+        }
+    }
+    for (const auto &key : keys_to_delete) {
+        root_map.erase(key);
+    }
 }
 
 void SparseVoxelGrid::Update(const std::vector<Eigen::Vector3d> &points, const Sophus::SE3d &pose) {
