@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <kinematic_icp/pipeline/KinematicICP.hpp>
 #include <sophus/se3.hpp>
 
@@ -8,19 +9,25 @@ int main() {
     kinematic_icp::pipeline::Config config;
     config.convergence_criterion = -1.0;
     config.max_num_threads = 1;
+    config.use_adaptive_threshold = false;
+    config.fixed_threshold = 100.0;
     config.use_adaptive_odometry_regularization = false;
     config.fixed_regularization = 0.0;
     kinematic_icp::pipeline::KinematicICP pipeline(config);
     const auto trajectory = world.generateCircularTrajectory();
     const auto extrinsic = Sophus::SE3d();
-    pipeline.RegisterFrame(world.Generate3DScan(), std::vector<double>(), extrinsic,
-                           Sophus::SE3d());
-    auto pose = pipeline.pose();
+    const auto scan = world.Generate3DScan();
+    std::vector<Eigen::Vector3d> transformed_scan(scan.size());
+    pipeline.RegisterFrame(scan, std::vector<double>(), extrinsic, Sophus::SE3d());
+    Sophus::SE3d initial_pose;
+    initial_pose.translation() = trajectory.at(0);
+    pipeline.SetPose(initial_pose);
     for (size_t i = 1; i < trajectory.size(); ++i) {
-        const auto scan = world.Generate3DScan(trajectory.at(i));
+        std::transform(scan.cbegin(), scan.cend(), transformed_scan.begin(),
+                       [&](const auto &p) { return p + trajectory.at(i); });
         const auto delta = trajectory.at(i) - trajectory.at(i - 1);
         Sophus::SE3d odom;
         odom.translation() = delta;
-        pipeline.RegisterFrame(scan, std::vector<double>(), extrinsic, odom);
+        pipeline.RegisterFrame(transformed_scan, std::vector<double>(), extrinsic, odom);
     }
 }
