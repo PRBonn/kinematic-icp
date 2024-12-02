@@ -18,16 +18,14 @@ int main() {
     const auto extrinsic = Sophus::SE3d();
     const auto scan = world.Generate3DScan();
     std::vector<Eigen::Vector3d> transformed_scan(scan.size());
-    pipeline.RegisterFrame(scan, std::vector<double>(), extrinsic, Sophus::SE3d());
-    Sophus::SE3d initial_pose;
-    initial_pose.translation() = trajectory.at(0);
-    pipeline.SetPose(initial_pose);
-    for (size_t i = 1; i < trajectory.size(); ++i) {
-        std::transform(scan.cbegin(), scan.cend(), transformed_scan.begin(),
-                       [&](const auto &p) { return p + trajectory.at(i); });
-        const auto delta = trajectory.at(i) - trajectory.at(i - 1);
-        Sophus::SE3d odom;
-        odom.translation() = delta;
-        pipeline.RegisterFrame(transformed_scan, std::vector<double>(), extrinsic, odom);
-    }
+    pipeline.VoxelMap().AddPoints(world.world_points);
+    // pipeline.RegisterFrame(scan, std::vector<double>(), extrinsic, Sophus::SE3d());
+    // for (size_t i = 1; i < trajectory.size(); ++i) {
+    //     std::transform(scan.cbegin(), scan.cend(), transformed_scan.begin(),
+    //                    [&](const auto &p) { return p + trajectory.at(i); });
+    //     const auto delta = trajectory.at(i) - trajectory.at(i - 1);
+    //     Sophus::SE3d odom;
+    //     odom.translation() = delta;
+    //     pipeline.RegisterFrame(transformed_scan, std::vector<double>(), extrinsic, odom);
+    // }
 }
