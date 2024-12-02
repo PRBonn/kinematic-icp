@@ -1,2 +1,5 @@
 add_executable(voxel_grids_benchmark voxel_grids_benchmark.cpp)
 target_link_libraries(voxel_grids_benchmark PUBLIC benchmark::benchmark kinematic_icp_pipeline Sophus::Sophus kiss_icp_core)
+
+add_executable(test test_loop.cpp)
+target_link_libraries(test PUBLIC kinematic_icp_pipeline)
