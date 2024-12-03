@@ -23,8 +23,10 @@
 #include "Registration.hpp"
 
 #include <tbb/blocked_range.h>
+#include <tbb/concurrent_vector.h>
 #include <tbb/global_control.h>
 #include <tbb/info.h>
+#include <tbb/parallel_for.h>
 #include <tbb/parallel_reduce.h>
 #include <tbb/task_arena.h>
 
@@ -38,7 +40,7 @@
 #include <tuple>
 
 using LinearSystem = std::pair<Eigen::Matrix2d, Eigen::Vector2d>;
-using Correspondences = std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>;
+using Correspondences = tbb::concurrent_vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>;
 
 namespace {
 constexpr double epsilon = std::numeric_limits<double>::min();
@@ -64,30 +66,17 @@ Correspondences DataAssociation(const std::vector<Eigen::Vector3d> &points,
     using points_iterator = std::vector<Eigen::Vector3d>::const_iterator;
     Correspondences associations;
     associations.reserve(points.size());
-    associations = tbb::parallel_reduce(
+    tbb::parallel_for(
         // Range
         tbb::blocked_range<points_iterator>{points.cbegin(), points.cend()},
-        // Identity
-        associations,
-        // 1st lambda: Parallel computation
-        [&](const tbb::blocked_range<points_iterator> &r, Correspondences res) -> Correspondences {
-            res.reserve(r.size());
+        [&](const tbb::blocked_range<points_iterator> &r) {
             std::for_each(r.begin(), r.end(), [&](const auto &point) {
                 const auto &[closest_neighbor, distance] = voxel_map.GetClosestNeighbor(T * point);
                 if (distance < max_correspondance_distance) {
-                    res.emplace_back(point, closest_neighbor);
+                    associations.emplace_back(point, closest_neighbor);
                 }
             });
-            return res;
-        },
-        // 2nd lambda: Parallel reduction
-        [](Correspondences a, const Correspondences &b) -> Correspondences {
-            a.insert(a.end(),                              //
-                     std::make_move_iterator(b.cbegin()),  //
-                     std::make_move_iterator(b.cend()));
-            return a;
         });
-
     return associations;
 }
 
