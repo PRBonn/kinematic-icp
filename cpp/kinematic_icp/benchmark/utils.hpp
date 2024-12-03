@@ -3,6 +3,7 @@
 #include <iostream>
 #include <kiss_icp/core/VoxelUtils.hpp>
 #include <random>
+#include <sophus/se3.hpp>
 
 auto VoxelDownsample(const std::vector<Eigen::Vector3d> &frame, const double voxel_size) {
     const std::vector<Eigen::Vector3d> &frame_downsample =
@@ -92,18 +93,20 @@ struct World {
         }
         return scan_results;
     }
-    std::vector<Eigen::Vector3d> generateCircularTrajectory() {
-        std::vector<Eigen::Vector3d> trajectory;
+    std::vector<Sophus::SE3d> generateCircularTrajectory() {
+        std::vector<Sophus::SE3d> trajectory;
         trajectory.reserve(NumPositionsTrajectory);
         const double radius = CubeSizeInMeters * 0.5;
 
         for (int i = 0; i < NumPositionsTrajectory; ++i) {
+            Sophus::SE3d pose;
             double angle = 2 * M_PI * i / NumPositionsTrajectory;
-            double x = radius * std::cos(angle);
-            double y = radius * std::sin(angle);
-            double z = 0.0;  // Assuming a planar circle
+            pose.so3() = Sophus::SO3d::exp(Eigen::Vector3d(0, 0, angle));
+            pose.translation().x() = radius * std::cos(angle);
+            pose.translation().y() = radius * std::sin(angle);
+            pose.translation().z() = 0.0;  // Assuming a planar circle
 
-            trajectory.emplace_back(x, y, z);
+            trajectory.emplace_back(pose);
         }
 
         return trajectory;

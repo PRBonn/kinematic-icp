@@ -67,9 +67,7 @@ static void Update_BonxaiGrid(benchmark::State &state) {
                                         default_config.max_points_per_voxel);
     grid.AddPoints(world.world_points);
     for (auto _ : state) {
-        for (size_t i = 0; i < trajectory.size(); ++i) {
-            Sophus::SE3d pose;
-            pose.translation() = trajectory.at(i);
+        for (const auto &pose : trajectory) {
             grid.Update(frame_downsample, pose);
         }
     }
@@ -85,9 +83,7 @@ static void Update_VoxelHashMap(benchmark::State &state) {
                                 default_config.max_points_per_voxel);
     grid.AddPoints(world.world_points);
     for (auto _ : state) {
-        for (size_t i = 0; i < trajectory.size(); ++i) {
-            Sophus::SE3d pose;
-            pose.translation() = trajectory.at(i);
+        for (const auto &pose : trajectory) {
             grid.Update(frame_downsample, pose);
         }
     }

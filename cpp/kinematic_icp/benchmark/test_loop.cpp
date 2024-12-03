@@ -20,7 +20,7 @@ int main() {
     const auto trajectory = world.generateCircularTrajectory();
     for (size_t i = 1; i < trajectory.size(); ++i) {
         std::transform(scan.cbegin(), scan.cend(), transformed_scan.begin(),
-                       [&](const auto &p) { return p + trajectory.at(i); });
+                       [&](const auto &p) { return trajectory.at(i) * p; });
         pipeline.VoxelMap().AddPoints(scan);
     }
 }
