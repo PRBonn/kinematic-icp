@@ -45,8 +45,8 @@ static constexpr std::array<Bonxai::CoordT, 27> shifts{
     Bonxai::CoordT{1, 0, -1},   Bonxai::CoordT{1, 0, 0},   Bonxai::CoordT{1, 0, 1},
     Bonxai::CoordT{1, 1, -1},   Bonxai::CoordT{1, 1, 0},   Bonxai::CoordT{1, 1, 1}};
 
-static constexpr uint8_t inner_grid_bits = 2;
-static constexpr uint8_t leaf_bits = 2;
+static constexpr uint8_t inner_grid_log2_size = 2;
+static constexpr uint8_t leaf_grid_log2_size = 2;
 }  // namespace
 
 namespace kinematic_icp {
@@ -57,7 +57,7 @@ SparseVoxelGrid::SparseVoxelGrid(const double voxel_size,
     : voxel_size_(voxel_size),
       clipping_distance_(clipping_distance),
       max_points_per_voxel_(max_points_per_voxel),
-      map_(voxel_size, inner_grid_bits, leaf_bits),
+      map_(voxel_size, inner_grid_log2_size, leaf_grid_log2_size),
       accessor_(map_.createAccessor()) {}
 
 std::tuple<Eigen::Vector3d, double> SparseVoxelGrid::GetClosestNeighbor(
