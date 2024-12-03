@@ -17,7 +17,7 @@ struct World {
     static constexpr double CubeSizeInMeters = 100;
     static constexpr int ScanHorizontalResolution = 1024;
     static constexpr int ScanVerticalResolution = 16;
-    static constexpr int NumPositionsTrajectory = 100;
+    static constexpr int NumPositionsTrajectory = 100000;
     World() {
         world_points.reserve(6 * NumSamplesPerFace);
         samplePointsOnCubeFace({1, 0, 0}, CubeSizeInMeters);    // +X face
@@ -95,7 +95,7 @@ struct World {
     std::vector<Eigen::Vector3d> generateCircularTrajectory() {
         std::vector<Eigen::Vector3d> trajectory;
         trajectory.reserve(NumPositionsTrajectory);
-        const double radius = CubeSizeInMeters * 0.25;
+        const double radius = CubeSizeInMeters * 0.5;
 
         for (int i = 0; i < NumPositionsTrajectory; ++i) {
             double angle = 2 * M_PI * i / NumPositionsTrajectory;
