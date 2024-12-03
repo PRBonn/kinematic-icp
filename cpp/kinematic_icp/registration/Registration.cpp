@@ -26,7 +26,7 @@
 #include <tbb/concurrent_vector.h>
 #include <tbb/global_control.h>
 #include <tbb/info.h>
-#include <tbb/parallel_for.h>
+#include <tbb/parallel_for_each.h>
 #include <tbb/parallel_reduce.h>
 #include <tbb/task_arena.h>
 
@@ -63,20 +63,15 @@ Correspondences DataAssociation(const std::vector<Eigen::Vector3d> &points,
                                 const kiss_icp::VoxelHashMap &voxel_map,
                                 const Sophus::SE3d &T,
                                 const double max_correspondance_distance) {
-    using points_iterator = std::vector<Eigen::Vector3d>::const_iterator;
     Correspondences associations;
     associations.reserve(points.size());
-    tbb::parallel_for(
-        // Range
-        tbb::blocked_range<points_iterator>{points.cbegin(), points.cend()},
-        [&](const tbb::blocked_range<points_iterator> &r) {
-            std::for_each(r.begin(), r.end(), [&](const auto &point) {
-                const auto &[closest_neighbor, distance] = voxel_map.GetClosestNeighbor(T * point);
-                if (distance < max_correspondance_distance) {
-                    associations.emplace_back(point, closest_neighbor);
-                }
-            });
-        });
+    tbb::parallel_for_each(points.cbegin(), points.cend(), [&](const auto &point) {
+        const auto &transformed_point = T * point;
+        const auto &[closest_neighbor, distance] = voxel_map.GetClosestNeighbor(transformed_point);
+        if (distance < max_correspondance_distance) {
+            associations.emplace_back(point, closest_neighbor);
+        }
+    });
     return associations;
 }
 
