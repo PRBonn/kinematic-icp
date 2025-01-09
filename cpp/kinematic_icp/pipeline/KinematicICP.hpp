@@ -24,9 +24,9 @@
 
 #include <Eigen/Core>
 #include <cmath>
+#include <kiss_icp/core/Preprocessing.hpp>
 #include <kiss_icp/core/Threshold.hpp>
 #include <kiss_icp/core/VoxelHashMap.hpp>
-#include <kiss_icp/pipeline/KissICP.hpp>
 #include <sophus/se3.hpp>
 #include <tuple>
 #include <vector>
@@ -76,6 +76,7 @@ public:
                                     config.use_adaptive_threshold,
                                     config.fixed_threshold),
           config_(config),
+          preprocessor_(config.max_range, config.min_range, config.deskew, config.max_num_threads),
           local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel) {}
 
     Vector3dVectorTuple RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
@@ -104,6 +105,7 @@ protected:
     CorrespondenceThreshold correspondence_threshold_;
     Config config_;
     // KISS-ICP pipeline modules
+    kiss_icp::Preprocessor preprocessor_;
     kiss_icp::VoxelHashMap local_map_;
 };
 
