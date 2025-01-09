@@ -23,7 +23,6 @@
 #include "KinematicICP.hpp"
 
 #include <Eigen/Core>
-#include <kiss_icp/core/Deskew.hpp>
 #include <kiss_icp/core/Preprocessing.hpp>
 #include <kiss_icp/core/Registration.hpp>
 #include <kiss_icp/core/VoxelHashMap.hpp>
@@ -56,7 +55,7 @@ KinematicICP::Vector3dVectorTuple KinematicICP::RegisterFrame(
     const Sophus::SE3d &relative_odometry_in_lidar =
         lidar_to_base.inverse() * relative_odometry * lidar_to_base;
     const auto &preprocessed_frame =
-        preprocessor_.preprocess(frame, timestamps, relative_odometry_in_lidar);
+        preprocessor_.Preprocess(frame, timestamps, relative_odometry_in_lidar);
     // Give the frame in base frame
     const auto &preprocessed_frame_in_base = transform_points(preprocessed_frame, lidar_to_base);
     // Voxelize
