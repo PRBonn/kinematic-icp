@@ -139,7 +139,7 @@ void SparseVoxelGrid::Update(const std::vector<Eigen::Vector3d> &points, const S
 std::vector<Eigen::Vector3d> SparseVoxelGrid::Pointcloud() const {
     std::vector<Eigen::Vector3d> point_cloud;
     point_cloud.reserve(map_.activeCellsCount() * max_points_per_voxel_);
-    map_.forEachCell([&point_cloud, this](VoxelBlock &block, const auto &) {
+    map_.forEachCell([&point_cloud, this](const VoxelBlock &block, const auto &) {
         point_cloud.insert(point_cloud.end(), block.cbegin(), block.cend());
     });
     return point_cloud;
