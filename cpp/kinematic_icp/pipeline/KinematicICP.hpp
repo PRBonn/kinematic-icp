@@ -89,8 +89,8 @@ public:
 
     std::vector<Eigen::Vector3d> LocalMap() const { return local_map_.Pointcloud(); };
 
-    const SparseVoxelGrid &VoxelMap() const { return local_map_; };
-    SparseVoxelGrid &VoxelMap() { return local_map_; };
+    const kiss_icp::VoxelHashMap &VoxelMap() const { return local_map_; };
+    kiss_icp::VoxelHashMap &VoxelMap() { return local_map_; };
 
     const Sophus::SE3d &pose() const { return last_pose_; }
     Sophus::SE3d &pose() { return last_pose_; }
@@ -101,7 +101,8 @@ protected:
     KinematicRegistration registration_;
     CorrespondenceThreshold correspondence_threshold_;
     Config config_;
-    SparseVoxelGrid local_map_;
+    // KISS-ICP pipeline modules
+    kiss_icp::VoxelHashMap local_map_;
 };
 
 }  // namespace kinematic_icp::pipeline
