@@ -25,7 +25,7 @@ SOFTWARE.
 -->
 <package format="3">
   <name>kinematic_icp</name>
-  <version>0.0.1</version>
+  <version>0.1.1</version>
   <description>ROS 2 Wrapper</description>
   <maintainer email="tiziano.guadagnino93@gmail.com">frevo137</maintainer>
   <license>MIT</license>
