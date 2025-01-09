@@ -26,6 +26,6 @@ if(CMAKE_VERSION VERSION_GREATER 3.24)
 endif()
 
 include(FetchContent)
-FetchContent_Declare(kiss_icp URL https://github.com/PRBonn/kiss-icp/archive/refs/tags/v1.2.0.tar.gz SOURCE_SUBDIR
+FetchContent_Declare(kiss_icp URL https://github.com/PRBonn/kiss-icp/archive/refs/tags/v1.1.0.tar.gz SOURCE_SUBDIR
                                   cpp/kiss_icp)
 FetchContent_MakeAvailable(kiss_icp)
