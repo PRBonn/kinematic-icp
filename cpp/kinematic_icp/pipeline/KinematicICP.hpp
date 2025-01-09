@@ -25,7 +25,6 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <kiss_icp/core/Preprocessing.hpp>
-#include <kiss_icp/core/Threshold.hpp>
 #include <kiss_icp/core/VoxelHashMap.hpp>
 #include <sophus/se3.hpp>
 #include <tuple>
