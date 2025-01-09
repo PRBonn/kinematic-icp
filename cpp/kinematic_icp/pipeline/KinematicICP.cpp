@@ -23,7 +23,6 @@
 #include "KinematicICP.hpp"
 
 #include <Eigen/Core>
-#include <kiss_icp/core/Deskew.hpp>
 #include <kiss_icp/core/Preprocessing.hpp>
 #include <kiss_icp/core/VoxelUtils.hpp>
 #include <vector>
@@ -51,18 +50,16 @@ KinematicICP::Vector3dVectorTuple KinematicICP::RegisterFrame(
     const std::vector<double> &timestamps,
     const Sophus::SE3d &lidar_to_base,
     const Sophus::SE3d &relative_odometry) {
-    const auto &deskew_frame = [&]() -> std::vector<Eigen::Vector3d> {
-        if (!config_.deskew || timestamps.empty()) return frame;
-        return kiss_icp::DeSkewScan(frame, timestamps,
-                                    lidar_to_base.inverse() * relative_odometry * lidar_to_base);
-    }();
-    const auto &deskew_frame_in_base = transform_points(deskew_frame, lidar_to_base);
-    // Preprocess the input cloud
-    const auto &cropped_frame =
-        kiss_icp::Preprocess(deskew_frame_in_base, config_.max_range, config_.min_range);
-
+    // Need to deskew in lidar frame
+    const Sophus::SE3d &relative_odometry_in_lidar =
+        lidar_to_base.inverse() * relative_odometry * lidar_to_base;
+    const auto &preprocessed_frame =
+        preprocessor_.Preprocess(frame, timestamps, relative_odometry_in_lidar);
+    // Give the frame in base frame
+    const auto &preprocessed_frame_in_base = transform_points(preprocessed_frame, lidar_to_base);
     // Voxelize
-    const auto &[source, frame_downsample] = Voxelize(cropped_frame, config_.voxel_size);
+    const auto &[source, frame_downsample] =
+        Voxelize(preprocessed_frame_in_base, config_.voxel_size);
 
     // Get adaptive_threshold
     const double tau = correspondence_threshold_.ComputeThreshold();
@@ -84,6 +81,6 @@ KinematicICP::Vector3dVectorTuple KinematicICP::RegisterFrame(
 
     // Return the (deskew) input raw scan (frame) and the points used for
     // registration (source)
-    return {deskew_frame_in_base, source};
+    return {preprocessed_frame_in_base, source};
 }
 }  // namespace kinematic_icp::pipeline
