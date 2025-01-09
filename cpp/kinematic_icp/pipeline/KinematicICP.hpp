@@ -75,7 +75,9 @@ public:
                                     config.use_adaptive_threshold,
                                     config.fixed_threshold),
           config_(config),
-          local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel) {}
+          local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel),
+          preprocessor_(config.max_range, config.min_range, config.deskew, config.max_num_threads) {
+    }
 
     Vector3dVectorTuple RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
                                       const std::vector<double> &timestamps,
@@ -98,21 +100,13 @@ public:
 
 protected:
     Sophus::SE3d last_pose_;
-    // Kinematic module
+    // Kinematic Modules
     KinematicRegistration registration_;
     CorrespondenceThreshold correspondence_threshold_;
     Config config_;
-<<<<<<< HEAD
     SparseVoxelGrid local_map_;
-=======
-<<<<<<< HEAD
-    // KISS-ICP pipeline modules
+    // Kiss Module
     kiss_icp::Preprocessor preprocessor_;
-    kiss_icp::VoxelHashMap local_map_;
-=======
-    SparseVoxelGrid local_map_;
->>>>>>> 01188b4 (At least replicate the functionalities of kiss map, need to test and)
->>>>>>> 7630bc5 (At least replicate the functionalities of kiss map, need to test and)
 };
 
 }  // namespace kinematic_icp::pipeline
