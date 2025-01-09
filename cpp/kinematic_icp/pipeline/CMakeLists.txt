@@ -23,5 +23,5 @@
 add_library(kinematic_icp_pipeline STATIC)
 target_sources(kinematic_icp_pipeline PRIVATE KinematicICP.cpp)
 target_link_libraries(kinematic_icp_pipeline PUBLIC kinematic_icp_registration kinematic_icp_threshold
-                                                    kiss_icp_pipeline)
+                                                    kinematic_icp_local_map kiss_icp_core)
 set_global_target_properties(kinematic_icp_pipeline)

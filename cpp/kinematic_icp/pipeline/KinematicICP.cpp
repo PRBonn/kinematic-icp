@@ -24,7 +24,7 @@
 
 #include <Eigen/Core>
 #include <kiss_icp/core/Preprocessing.hpp>
-#include <kiss_icp/core/VoxelHashMap.hpp>
+#include <kiss_icp/core/VoxelUtils.hpp>
 #include <vector>
 
 namespace {
