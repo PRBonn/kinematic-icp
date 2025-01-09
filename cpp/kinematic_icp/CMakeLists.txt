@@ -21,7 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 cmake_minimum_required(VERSION 3.16...3.26)
-project(kinematic_icp_cpp VERSION 0.0.1 LANGUAGES CXX)
+project(kinematic_icp_cpp VERSION 0.2.0 LANGUAGES CXX)
 
 # Setup build options for the underlying kiss dependency
 option(USE_CCACHE "Build using Ccache if found on the path" ON)
