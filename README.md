@@ -102,13 +102,13 @@ ros2 launch kinematic_icp online_node.launch.py lidar_topic:=<LASER_2D_TOPIC> us
 If you want to test the code on a sample bag file, just download it [here](https://www.ipb.uni-bonn.de/html/projects/kinematic-icp/2024-08-23-11-05-41_0_clipped.mcap) and run
 
 ```sh
-ros2 launch kinematic_icp offline_node.launch.py lidar_topic:=/lidar_points bag_filename:=2024-08-23-11-05-41_0_clipped.mcap
+ros2 launch kinematic_icp offline_node.launch.py lidar_topic:=/lidar_points bag_filename:=./2024-08-23-11-05-41_0_clipped.mcap
 ```
 
 or for the 2D LiDAR
 
 ```sh
-ros2 launch kinematic_icp offline_node.launch.py lidar_topic:=/front_scan bag_filename:=2024-08-23-11-05-41_0_clipped.mcap use_2d_lidar:=true
+ros2 launch kinematic_icp offline_node.launch.py lidar_topic:=/front_scan bag_filename:=./2024-08-23-11-05-41_0_clipped.mcap use_2d_lidar:=true
 ```
 
 ## Citation
