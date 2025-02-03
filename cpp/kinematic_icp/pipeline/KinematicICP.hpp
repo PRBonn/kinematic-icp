@@ -25,12 +25,12 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <kiss_icp/core/Preprocessing.hpp>
-#include <kiss_icp/core/VoxelHashMap.hpp>
 #include <sophus/se3.hpp>
 #include <tuple>
 #include <vector>
 
 #include "kinematic_icp/correspondence_threshold/CorrespondenceThreshold.hpp"
+#include "kinematic_icp/local_map/SparseVoxelGrid.hpp"
 #include "kinematic_icp/registration/Registration.hpp"
 
 namespace kinematic_icp::pipeline {
@@ -75,8 +75,9 @@ public:
                                     config.use_adaptive_threshold,
                                     config.fixed_threshold),
           config_(config),
-          preprocessor_(config.max_range, config.min_range, config.deskew, config.max_num_threads),
-          local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel) {}
+          local_map_(config.voxel_size, config.max_range, config.max_points_per_voxel),
+          preprocessor_(config.max_range, config.min_range, config.deskew, config.max_num_threads) {
+    }
 
     Vector3dVectorTuple RegisterFrame(const std::vector<Eigen::Vector3d> &frame,
                                       const std::vector<double> &timestamps,
@@ -91,21 +92,21 @@ public:
 
     std::vector<Eigen::Vector3d> LocalMap() const { return local_map_.Pointcloud(); };
 
-    const kiss_icp::VoxelHashMap &VoxelMap() const { return local_map_; };
-    kiss_icp::VoxelHashMap &VoxelMap() { return local_map_; };
+    const SparseVoxelGrid &VoxelMap() const { return local_map_; };
+    SparseVoxelGrid &VoxelMap() { return local_map_; };
 
     const Sophus::SE3d &pose() const { return last_pose_; }
     Sophus::SE3d &pose() { return last_pose_; }
 
 protected:
     Sophus::SE3d last_pose_;
-    // Kinematic module
+    // Kinematic Modules
     KinematicRegistration registration_;
     CorrespondenceThreshold correspondence_threshold_;
     Config config_;
-    // KISS-ICP pipeline modules
+    SparseVoxelGrid local_map_;
+    // Kiss Module
     kiss_icp::Preprocessor preprocessor_;
-    kiss_icp::VoxelHashMap local_map_;
 };
 
 }  // namespace kinematic_icp::pipeline
