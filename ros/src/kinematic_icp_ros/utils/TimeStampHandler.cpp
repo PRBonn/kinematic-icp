@@ -112,7 +112,7 @@ std::tuple<StampType, StampType, std::vector<double>> TimeStampHandler::ProcessT
     const StampType msg_stamp = msg->header.stamp;
     const StampType begin_stamp = last_processed_stamp_;
     StampType end_stamp = msg_stamp;
-    if (max_it != timestamps.cend()) {
+    if (*max_it != *min_it) {
         const double &max_stamp_in_seconds = *max_it;
         const double &min_stamp_in_seconds = *min_it;
         const double msg_stamp_in_seconds = this->toTime(msg_stamp);
