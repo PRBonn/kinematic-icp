@@ -46,7 +46,7 @@ OnlineNode ::OnlineNode(const rclcpp::NodeOptions &options) {
         RCLCPP_INFO_STREAM(node_->get_logger(),
                            "Started in 2D scanner mode with topic: " << lidar_topic_);
         laser_scan_sub_ = node_->create_subscription<sensor_msgs::msg::LaserScan>(
-            lidar_topic_, rclcpp::SystemDefaultsQoS(),
+            lidar_topic_, rclcpp::SensorDataQoS(),
             [&](const sensor_msgs::msg::LaserScan::ConstSharedPtr &msg) {
                 const sensor_msgs::msg::PointCloud2::ConstSharedPtr lidar_msg = [&]() {
                     auto projected_scan = std::make_shared<sensor_msgs::msg::PointCloud2>();
@@ -60,7 +60,7 @@ OnlineNode ::OnlineNode(const rclcpp::NodeOptions &options) {
         RCLCPP_INFO_STREAM(node_->get_logger(),
                            "Started in 3D Lidar mode with topic: " << lidar_topic_);
         pointcloud_sub_ = node_->create_subscription<sensor_msgs::msg::PointCloud2>(
-            lidar_topic_, rclcpp::SystemDefaultsQoS(),
+            lidar_topic_, rclcpp::SensorDataQoS(),
             [&](const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg) {
                 odometry_server_->RegisterFrame(msg);
             });
