@@ -20,7 +20,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-add_library(kinematic_icp_registration STATIC)
-target_sources(kinematic_icp_registration PRIVATE Registration.cpp)
-target_link_libraries(kinematic_icp_registration PUBLIC kinematic_icp_local_map Eigen3::Eigen TBB::tbb Sophus::Sophus)
-set_global_target_properties(kinematic_icp_registration)
+# Silence timestamp warning
+if(CMAKE_VERSION VERSION_GREATER 3.24)
+  cmake_policy(SET CMP0135 OLD)
+endif()
+
+include(FetchContent)
+FetchContent_Declare(
+  bonxai URL https://github.com/facontidavide/Bonxai/archive/refs/tags/v0.6.0.tar.gz SOURCE_SUBDIR bonxai_core
+  PATCH_COMMAND patch -p1 < ${CMAKE_CURRENT_LIST_DIR}/bonxai.patch UPDATE_DISCONNECTED 1)
+FetchContent_MakeAvailable(bonxai)

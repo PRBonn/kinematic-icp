@@ -21,32 +21,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 #pragma once
-
 #include <Eigen/Core>
+#include <array>
+#include <bonxai/bonxai.hpp>
 #include <sophus/se3.hpp>
-#include <vector>
-
-#include "kinematic_icp/local_map/SparseVoxelGrid.hpp"
 
 namespace kinematic_icp {
 
-struct KinematicRegistration {
-    explicit KinematicRegistration(const int max_num_iteration,
-                                   const double convergence_criterion,
-                                   const int max_num_threads,
-                                   const bool use_adaptive_odometry_regularization,
-                                   const double fixed_regularization);
+using VoxelBlock = std::vector<Eigen::Vector3d>;
 
-    Sophus::SE3d ComputeRobotMotion(const std::vector<Eigen::Vector3d> &frame,
-                                    const SparseVoxelGrid &voxel_map,
-                                    const Sophus::SE3d &last_robot_pose,
-                                    const Sophus::SE3d &relative_wheel_odometry,
-                                    const double max_correspondence_distance);
+struct SparseVoxelGrid {
+    explicit SparseVoxelGrid(const double voxel_size,
+                             const double clipping_distance,
+                             const unsigned int max_points_per_voxel);
 
-    int max_num_iterations_;
-    double convergence_criterion_;
-    int max_num_threads_;
-    bool use_adaptive_odometry_regularization_;
-    double fixed_regularization_;
+    inline void Clear() { map_.clear(Bonxai::ClearOption::CLEAR_MEMORY); }
+    inline bool Empty() const { return map_.activeCellsCount() == 0; }
+    void Update(const std::vector<Eigen::Vector3d> &points, const Sophus::SE3d &pose);
+    void AddPoints(const std::vector<Eigen::Vector3d> &points);
+    void RemovePointsFarFromLocation(const Eigen::Vector3d &origin);
+    std::vector<Eigen::Vector3d> Pointcloud() const;
+    std::tuple<Eigen::Vector3d, double> GetClosestNeighbor(const Eigen::Vector3d &query) const;
+
+    double voxel_size_;
+    double clipping_distance_;
+    unsigned int max_points_per_voxel_;
+    Bonxai::VoxelGrid<VoxelBlock> map_;
+
+private:
+    using AccessorType = typename Bonxai::VoxelGrid<VoxelBlock>::Accessor;
+    AccessorType accessor_;
 };
+
 }  // namespace kinematic_icp
