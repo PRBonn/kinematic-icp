@@ -42,21 +42,6 @@ find_package(std_srvs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
-set(dependencies
-    geometry_msgs
-    nav_msgs
-    rclcpp
-    rclcpp_components
-    rcutils
-    rosbag2_cpp
-    rosbag2_storage
-    sensor_msgs
-    laser_geometry
-    std_msgs
-    std_srvs
-    tf2_ros
-    visualization_msgs)
-
 add_library(
   kinematic_icp_ros SHARED
   src/kinematic_icp_ros/server/LidarOdometryServer.cpp src/kinematic_icp_ros/utils/RosUtils.cpp
@@ -64,8 +49,25 @@ add_library(
   src/kinematic_icp_ros/nodes/online_node.cpp) # Adding it here for composition
 target_compile_features(kinematic_icp_ros PUBLIC cxx_std_17)
 target_include_directories(kinematic_icp_ros PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(kinematic_icp_ros kinematic_icp_pipeline "${cpp_typesupport_target}")
-ament_target_dependencies(kinematic_icp_ros ${dependencies})
+target_link_libraries(
+  kinematic_icp_ros
+  kinematic_icp_pipeline
+  "${cpp_typesupport_target}"
+  ${geometry_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  ${std_srvs_TARGETS}
+  ${visualization_msgs_TARGETS}
+  laser_geometry::laser_geometry
+  rclcpp::rclcpp
+  rclcpp_components::component
+  rclcpp_components::component_manager
+  rcutils::rcutils
+  rosbag2_cpp::rosbag2_cpp
+  rosbag2_storage::rosbag2_storage
+  sensor_msgs::sensor_msgs_library
+  tf2_ros::static_transform_broadcaster_node
+  tf2_ros::tf2_ros)
 
 add_executable(kinematic_icp_offline_node src/kinematic_icp_ros/nodes/offline_node.cpp)
 target_link_libraries(kinematic_icp_offline_node PUBLIC kinematic_icp_ros)
