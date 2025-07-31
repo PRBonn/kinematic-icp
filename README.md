@@ -5,13 +5,13 @@
     <a href="https://github.com/PRBonn/kinematic-icp/blob/main/"><img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" /></a>
     <br />
     <br />
-    <a href=https://www.ipb.uni-bonn.de/wp-content/papercite-data/pdf/kissteam2025icra.pdf>Paper</a>
+    <a href=https://www.ipb.uni-bonn.de/wp-content/papercite-data/pdf/guadagnino2025icra.pdf>Paper</a>
     <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
     <a href=https://github.com/PRBonn/kinematic-icp/issues>Contact Us</a>
   <br />
   <br />
 
-[Kinematic-ICP](https://www.ipb.uni-bonn.de/wp-content/papercite-data/pdf/kissteam2025icra.pdf) is a LiDAR odometry approach that explicitly incorporates the kinematic constraints of mobile robots into the classic point-to-point ICP algorithm.
+[Kinematic-ICP](https://www.ipb.uni-bonn.de/wp-content/papercite-data/pdf/guadagnino2025icra.pdf) is a LiDAR odometry approach that explicitly incorporates the kinematic constraints of mobile robots into the classic point-to-point ICP algorithm.
 
 <img src="https://github.com/user-attachments/assets/c12195e0-4ca0-415e-814f-783ca77423d9" alt="Kinematic-ICP" width="500"/>
 
