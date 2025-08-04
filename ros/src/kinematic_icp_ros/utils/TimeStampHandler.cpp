@@ -112,11 +112,11 @@ std::tuple<StampType, StampType, std::vector<double>> TimeStampHandler::ProcessT
     const StampType msg_stamp = msg->header.stamp;
     const StampType begin_stamp = last_processed_stamp_;
     StampType end_stamp = msg_stamp;
-    if (max_it != timestamps.cend()) {
+    if (!timestamps.empty() && (*max_it != *min_it)) {
         const double &max_stamp_in_seconds = *max_it;
         const double &min_stamp_in_seconds = *min_it;
         const double msg_stamp_in_seconds = this->toTime(msg_stamp);
-
+    
         // Check if stamping happens and the beginning or the end of scan
         const bool is_stamped_at_the_beginning =
             std::abs(msg_stamp_in_seconds - max_stamp_in_seconds) > 1e-8;
@@ -126,13 +126,21 @@ std::tuple<StampType, StampType, std::vector<double>> TimeStampHandler::ProcessT
                 tf2::durationFromSec(max_stamp_in_seconds - min_stamp_in_seconds);
             end_stamp = StampType(rclcpp::Time(end_stamp) + scan_duration);
         }
-
+    
         // Normalize timestamps
         std::transform(timestamps.cbegin(), timestamps.cend(), timestamps.begin(),
                        [&](const auto &timestamp) {
                            return (timestamp - min_stamp_in_seconds) /
                                   (max_stamp_in_seconds - min_stamp_in_seconds);
                        });
+        // timestamps.empty(): no timestamps found in PointCloud2.
+    } else if (timestamps.empty()) {
+        RCLCPP_WARN_ONCE(rclcpp::get_logger("kinematic_icp_ros"),
+                        "No timestamps found in PointCloud2.");
+    } else {
+        // *max_it == *min_it: all timestamps are exactly equal.
+        RCLCPP_WARN_ONCE(rclcpp::get_logger("kinematic_icp_ros"),
+                        "Timestamps are all identical.");
     }
     last_processed_stamp_ = end_stamp;
     return std::make_tuple(begin_stamp, end_stamp, timestamps);
