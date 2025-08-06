@@ -29,7 +29,8 @@ option(USE_SYSTEM_EIGEN3 "Use system pre-installed Eigen" ON)
 option(USE_SYSTEM_SOPHUS "Use system pre-installed Sophus" ON)
 option(USE_SYSTEM_TSL-ROBIN-MAP "Use system pre-installed tsl_robin" ON)
 option(USE_SYSTEM_TBB "Use system pre-installed oneAPI/tbb" ON)
-include(kiss_icp/kiss-icp.cmake)
+
+include(3rdparty/include_dependencies.cmake)
 
 # KISS dependecies that are also used in Kinematic.
 # If the internal FetchContent from kiss is in use (through the above options)
@@ -54,6 +55,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CompilerOptions.cmake)
 
+add_subdirectory(local_map)
 add_subdirectory(correspondence_threshold)
 add_subdirectory(registration)
 add_subdirectory(pipeline)
